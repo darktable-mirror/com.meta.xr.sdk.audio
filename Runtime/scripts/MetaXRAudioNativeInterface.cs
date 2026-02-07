@@ -121,7 +121,6 @@ public class MetaXRAudioNativeInterface
         int SetSharedReverbWetLevel(float linearLevel);
         int SetEnabled(int feature, bool enabled);
         int SetRoomClutterFactor(float[] clutterFactor);
-        int SetReflectionModel(int reflectionModel);
         int SetDynamicRoomRaysPerSecond(int RaysPerSecond);
         int SetDynamicRoomInterpSpeed(float InterpSpeed);
         int SetDynamicRoomMaxWallDistance(float MaxWallDistance);
@@ -164,13 +163,6 @@ public class MetaXRAudioNativeInterface
         public int SetRoomClutterFactor(float[] clutterFactor)
         {
             return ovrAudio_SetRoomClutterFactor(context, clutterFactor);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetReflectionModel(IntPtr context, int model);
-        public int SetReflectionModel(int model)
-        {
-            return ovrAudio_SetReflectionModel(context, model);
         }
 
         [DllImport(binaryName)]
@@ -295,13 +287,6 @@ public class MetaXRAudioNativeInterface
         }
 
         [DllImport(binaryName)]
-        private static extern int ovrAudio_SetReflectionModel(IntPtr context, int model);
-        public int SetReflectionModel(int model)
-        {
-            return ovrAudio_SetReflectionModel(context, model);
-        }
-
-        [DllImport(binaryName)]
         private static extern int ovrAudio_SetSharedReverbWetLevel(IntPtr context, float linearLevel);
         public int SetSharedReverbWetLevel(float linearLevel)
         {
@@ -399,13 +384,6 @@ public class MetaXRAudioNativeInterface
         public int SetRoomClutterFactor(float[] clutterFactor)
         {
             return ovrAudio_SetRoomClutterFactor(context, clutterFactor);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetReflectionModel(IntPtr context, int model);
-        public int SetReflectionModel(int model)
-        {
-            return ovrAudio_SetReflectionModel(context, model);
         }
 
         [DllImport(binaryName)]
