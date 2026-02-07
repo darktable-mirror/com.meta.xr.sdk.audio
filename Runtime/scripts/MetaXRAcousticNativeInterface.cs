@@ -210,7 +210,9 @@ namespace Meta.XR.Acoustics
     public enum ControlZoneProperty : uint
     {
         RT60 = 0, ///< A frequency-dependent property describing the reverberation time adjustment in the Zone. The value represents a signed additive adjustment to the simulated reverb time (units: seconds).
-        REVERB_LEVEL ///< A frequency-dependent property describing the reverberation level adjustment in the Zone. The value represents a signed additive adjustment to the simulated reverb level (units: decibels).
+        REVERB_LEVEL, ///< A frequency-dependent property describing the reverberation level adjustment in the Zone. The value represents a signed additive adjustment to the simulated reverb level (units: decibels).
+        EARLY_REFLECTIONS_LEVEL, ///< A frequency-dependent property describing the early reflection level adjustment in the Zone. The value represents a signed additive adjustment to the simulated early reflection level (units: decibels).
+        EARLY_REFLECTIONS_TIME ///< A scalar (broadband) property describing the early reflections time adjustment in the Zone.
     }
 }
 

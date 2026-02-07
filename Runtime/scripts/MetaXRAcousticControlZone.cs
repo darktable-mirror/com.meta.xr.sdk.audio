@@ -52,6 +52,12 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
         /// \brief Adjusts the reverb level of points inside the zone
         internal Spectrum reverbLevel = new Spectrum();
         [SerializeField]
+        /// \brief Adjusts the early reflections level of points inside the zone
+        internal Spectrum earlyReflectionsLevel = new Spectrum();
+        [SerializeField]
+        /// \brief Adjusts the early reflection decay time of points inside the zone
+        internal float earlyReflectionsTime = 1.0f;
+        [SerializeField]
         /// \brief A value in meters to describe the distance over which to fade out the Control Zone adjustments starting from the boundary
         internal float fadeDistance = 1.0f;
         internal void Clone(State other)
@@ -59,6 +65,8 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
             color = other.color;
             reverbLevel.Clone(other.reverbLevel);
             rt60.Clone(other.rt60);
+            earlyReflectionsLevel.Clone(other.earlyReflectionsLevel);
+            earlyReflectionsTime = other.earlyReflectionsTime;
             fadeDistance = other.fadeDistance;
 
         }
@@ -73,6 +81,10 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
     internal Spectrum Rt60 { get => _state.rt60; set => _state.rt60 = value; }
 
     internal Spectrum ReverbLevel { get => _state.reverbLevel; set => _state.reverbLevel = value; }
+
+    internal Spectrum EarlyReflectionsLevel { get => _state.earlyReflectionsLevel; set => _state.earlyReflectionsLevel = value; }
+
+    internal float EarlyReflectionsTime { get => _state.earlyReflectionsTime; set => _state.earlyReflectionsTime = value; }
 
     internal float FadeDistance
     {
@@ -104,6 +116,7 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
     {
         Rt60.points = new List<Point>() { new Point(1000f, 0.0f) };
         ReverbLevel.points = new List<Point>() { new Point(1000f, 0.0f) };
+        EarlyReflectionsLevel.points = new List<Point>() { new Point(1000f, 0.0f) };
     }
 
     /// Initialize the Control Zone. This is called after Awake() and before the first Update().
@@ -220,6 +233,19 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
             Native.Interface.ControlZoneSetFrequency(
                 _controlHandle, ControlZoneProperty.REVERB_LEVEL, p.frequency, p.data);
         }
+
+        // Early Reflections Level
+        Native.Interface.ControlZoneReset(_controlHandle, ControlZoneProperty.EARLY_REFLECTIONS_LEVEL);
+        foreach (Point p in EarlyReflectionsLevel.points)
+        {
+            Native.Interface.ControlZoneSetFrequency(
+                _controlHandle, ControlZoneProperty.EARLY_REFLECTIONS_LEVEL, p.frequency, p.data);
+        }
+
+        // Early Reflections Time
+        Native.Interface.ControlZoneReset(_controlHandle, ControlZoneProperty.EARLY_REFLECTIONS_TIME);
+        Native.Interface.ControlZoneSetFrequency(
+                _controlHandle, ControlZoneProperty.EARLY_REFLECTIONS_TIME, 1000.0f, EarlyReflectionsTime);
     }
 
     //***********************************************************************

@@ -32,8 +32,10 @@ internal sealed class MetaXRAcousticControlZoneEditor : Editor
 {
     internal static readonly Color kRt60SpectrumColor = new Color(0.0f, 0.8f, 0.5f);
     internal static readonly Color kReverbLevelSpectrumColor = new Color(0.8f, 0.5f, 0.8f);
+    internal static readonly Color kEarlyReflectionsLevelSpectrumColor = new Color(0.8f, 0.5f, 0.05f);
     private MetaXRAudioSpectrumEditor rt60;
     private MetaXRAudioSpectrumEditor reverbLevel;
+    private MetaXRAudioSpectrumEditor earlyReflectionsLevel;
 
     static MetaXRAcousticControlZoneEditor()
     {
@@ -126,14 +128,22 @@ internal sealed class MetaXRAcousticControlZoneEditor : Editor
             reverbLevel.dataUnits = " dB";
         }
 
+        if (earlyReflectionsLevel == null)
+        {
+            earlyReflectionsLevel = new MetaXRAudioSpectrumEditor("Early Reflection Level Adjustment", "Adjusts the early reflection level inside the zone", MetaXRAudioSpectrumEditor.AxisScale.SquareCentered, kEarlyReflectionsLevelSpectrumColor, -24.0f, 24.0f);
+            earlyReflectionsLevel.dataUnits = " dB";
+        }
+
         rt60.LoadFoldoutState();
         reverbLevel.LoadFoldoutState();
+        earlyReflectionsLevel.LoadFoldoutState();
     }
 
     private void OnDisable()
     {
         rt60.SaveFoldoutState();
         reverbLevel.SaveFoldoutState();
+        earlyReflectionsLevel.SaveFoldoutState();
     }
 
     public override void OnInspectorGUI()
@@ -144,10 +154,12 @@ internal sealed class MetaXRAcousticControlZoneEditor : Editor
 
         Color newColor = EditorGUILayout.ColorField(control.ZoneColor);
         float newFadeDistance = EditorGUILayout.FloatField(new GUIContent("Fade Distance", "The distance margin that is used to fade out the control's influence near the box boundaries"), control.FadeDistance);
+        float newReflectionsTime = EditorGUILayout.Slider(new GUIContent("Early Reflections Time", "A scale factor for the early reflection delays"), control.EarlyReflectionsTime, 0.01f, 10.0f);
 
         // Draw spectrum editors.
         rt60.Draw(control.Rt60, Event.current);
         reverbLevel.Draw(control.ReverbLevel, Event.current);
+        earlyReflectionsLevel.Draw(control.EarlyReflectionsLevel, Event.current);
 
         if (EditorGUI.EndChangeCheck())
         {
@@ -159,6 +171,7 @@ internal sealed class MetaXRAcousticControlZoneEditor : Editor
 
             control.ZoneColor = newColor;
             control.FadeDistance = Mathf.Max(newFadeDistance, 0.0f);
+            control.EarlyReflectionsTime = newReflectionsTime;
 
             // Ensure that the gizmos are redrawn after editing the box.
             UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
