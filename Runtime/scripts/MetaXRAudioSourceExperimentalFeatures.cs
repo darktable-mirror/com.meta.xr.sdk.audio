@@ -124,6 +124,27 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         }
     }
 
+    [SerializeField]
+    [Tooltip("Adjust how much the direct-to-reverberant ratio increases with distance")]
+    [Range(0.0f, 1.0f)]
+    private float occlusionIntensity = 1.0f;
+    /// \brief Adjust how much occlusion to apply with 1 being complete occlusion and 0 being no occlusion  [0, 1], Default = 1.0f.
+    ///
+    /// When 0, the source will sound as if there is no occlusion even if there is an obstruction.
+    /// When 1, no direct sound will propagate from the source if there is obstruction between the source and listener.
+    /// 1 is the most realistic setting and the default.
+    public float OcclusionIntensity
+    {
+        get
+        {
+            return occlusionIntensity;
+        }
+        set
+        {
+            occlusionIntensity = Mathf.Clamp(value, 0.0f, 1.0f);
+        }
+    }
+
     public enum DirectivityPatternType
     {
         None, ///< No directivity applied. Omnidirectional radiation pattern. Effectively disables any directivity processing.
@@ -233,6 +254,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECTIVITY_ENABLED, directivityPattern == DirectivityPatternType.None ? 0.0f : 1.0f);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_REVERB_REACH, reverbReach);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECT_ENABLED, directSoundEnabled ? 1.0f : 0.0f);
+        source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_OCCLUSION_INTENSITY, occlusionIntensity);
     }
 
     // Import functions

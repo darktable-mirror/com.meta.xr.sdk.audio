@@ -242,6 +242,12 @@ public class MetaXRAudioSource : MonoBehaviour
         ///
         /// \see MetaXRAudioSourceExperimentalFeatures#DirectSoundEnabled for further description and a more convenient control of this parameter.
         P_DIRECT_ENABLED,
+        /// \brief Adjust how much occlusion to apply with 1 being complete occlusion and 0 being no occlusion  [0, 1], Default = 1.0f.
+        ///
+        /// When 0, the source will sound as if there is no occlusion even if there is an obstruction.
+        /// When 1, no direct sound will propagate from the source if there is obstruction between the source and listener.
+        /// 1 is the most realistic setting and the default.
+        P_OCCLUSION_INTENSITY,
         /// \brief Utility to easily query how many parameters the plugin has.
         P_NUM
     };

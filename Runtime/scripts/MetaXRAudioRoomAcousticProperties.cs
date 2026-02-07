@@ -151,7 +151,8 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
         WoodThin,
         WoodThick,
         WoodFloor,
-        WoodOnConcrete
+        WoodOnConcrete,
+        MetaDefault
     }
 
     [RuntimeInitializeOnLoadMethod]
@@ -232,6 +233,7 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
             case MaterialPreset.WoodThick: SetWallMaterialProperties(wallIndex, 0.812957883f, 0.895329595f, 0.941304684f, 0.949947298f); break;
             case MaterialPreset.WoodFloor: SetWallMaterialProperties(wallIndex, 0.852366328f, 0.898992121f, 0.934784114f, 0.930052698f); break;
             case MaterialPreset.WoodOnConcrete: SetWallMaterialProperties(wallIndex, 0.959999979f, 0.941232264f, 0.937923789f, 0.930052698f); break;
+            case MaterialPreset.MetaDefault: SetWallMaterialProperties(wallIndex, 0.9f, 0.9f, 0.9f, 0.9f); break;
                 //default:
                 //    break;
         }

@@ -1,5 +1,6 @@
 {
     "name": "Meta.XR.Audio",
+    "rootNamespace": "",
     "references": [],
     "includePlatforms": [
         "Android",
@@ -8,7 +9,7 @@
         "WindowsStandalone64"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
