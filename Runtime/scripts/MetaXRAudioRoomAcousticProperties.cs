@@ -28,30 +28,74 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Experimental.Playables;
 
+/// \brief Class that provides easy control over the shoebox room simulation.
+///
+/// One of these classes should be present in any scene you wish the control the parameters of shoebox reverberation. Multiple instantiations of this class within one scene will result in undefined behavior.
+//
+/// \see MetaXRAudioNativeInterface
 public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
 {
+    /// \brief Whether to center the room model on the listener or position its center in world space.
+    ///
+    /// If set to false, the room model's center will be placed at the transform position.
     [Tooltip("Center the room model on the listener. When disabled, center the room model on the GameObject this script is attached to.")]
     public bool lockPositionToListener = true;
+
+    /// \brief Width of the room, in meters.
     [Tooltip("Width of the room model in meters")]
     public float width = 8.0f;
+
+    /// \brief Height of the room, in meters.
     [Tooltip("Height of the room model in meters")]
     public float height = 3.0f;
+
+    /// \brief Depth of the room, in meters.
     [Tooltip("Depth of the room model in meters")]
     public float depth = 5.0f;
 
+    /// \brief Material preset of the left wall of the room model.
+    /// \see MaterialPreset
     [Tooltip("Material of the left wall of the room model")]
     public MaterialPreset leftMaterial = MaterialPreset.GypsumBoard;
+
+    /// \brief Material preset of the right wall of the room model.
+    /// \see MaterialPreset
     [Tooltip("Material of the right wall of the room model")]
     public MaterialPreset rightMaterial = MaterialPreset.GypsumBoard;
+
+    /// \brief Material preset of the ceiling of the room model.
+    /// \see MaterialPreset
     [Tooltip("Material of the ceiling of the room model")]
     public MaterialPreset ceilingMaterial = MaterialPreset.AcousticTile;
+
+    /// \brief Material preset of the floor of the room model.
+    /// \see MaterialPreset
     [Tooltip("Material of the floor of the room model")]
     public MaterialPreset floorMaterial = MaterialPreset.Carpet;
+
+    /// \brief Material preset of the front wall of the room model.
+    /// \see MaterialPreset
     [Tooltip("Material of the front wall of the room model")]
     public MaterialPreset frontMaterial = MaterialPreset.GypsumBoard;
+
+    /// \brief Material preset of the back wall of the room model.
+    /// \see MaterialPreset
     [Tooltip("Material of the back wall of the room model")]
     public MaterialPreset backMaterial = MaterialPreset.GypsumBoard;
 
+    /// \brief Current room clutter factor.
+    ///
+    /// This is a simplified interface to the native, frequency-dependent clutter factor. The singular value represented here is transformed into a the frequency-dependent clutter factor of MetaXRAudioNativeInterface#NativeInterface#SetRoomClutterFactor through means of the following formula:
+    ///
+    /// \code
+    /// factor = clutterFactor;
+    /// for (int band = kAudioBandCount - 1; band >= 0; --band)
+    /// {
+    ///     clutterFactorBands[band] = factor;
+    ///     factor *= 0.5f; // clutter has less impact on low frequencies
+    /// }
+    /// \endcode
+    /// \see MetaXRAudioNativeInterface#NativeInterface#SetRoomClutterFactor
     [Tooltip("Diffuses the reflections and reverberation to simulate objects inside the room. Zero represents a completely empty room.")]
     [Range(0.0f, 1.0f)]
     public float clutterFactor = 0.5f;
@@ -62,7 +106,15 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
 #if UNITY_EDITOR
     private AudioListener currentListener = null;
 #endif
+
+    /// \brief Array of 6 materials, each with 4 frequency dependent reflection coefficients in [Left, Right, Ceiling, Floor, Front, Back] order.
+    ///
+    /// \see MetaXRAudioNativeInterface#NativeInterface#SetAdvancedBoxRoomParameters
     float[] wallMaterials = new float[6 * kAudioBandCount];
+
+    /// \brief Enum representing material presets.
+    ///
+    /// \see MetaXRAudioRoomAcousticProperties#SetWallMaterialPreset
     public enum MaterialPreset : int
     {
         AcousticTile = 0,
@@ -210,7 +262,7 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
             {
                 center = currentListener.transform.position;
             }
-       
+
         }
         Gizmos.color = new Color(0.8f, 0.8f, 0.8f, 0.25f);
         Gizmos.DrawCube(center, new Vector3(width, height, depth));

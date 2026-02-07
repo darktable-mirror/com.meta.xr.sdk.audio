@@ -21,15 +21,31 @@
 using UnityEngine;
 using System.Collections;
 
+/// \brief Class used to manage the saving and loading of global plug-in settings.
 #if UNITY_EDITOR
 [UnityEditor.InitializeOnLoad]
 #endif
 public sealed class MetaXRAudioSettings : ScriptableObject
 {
+    /// \brief Maximum number of mono or ambisonic sources available for use. [1,+Inf)
+    ///
+    /// If the application creates more objects than are available, the oldest voice (i.e. the one that has been
+    /// playing the longest) is silenced and the channel is reused for the next voice.
+    ///
+    /// This values is used in MetaXRAudioSource#OnBeforeSceneLoadRuntimeMethod via the MetaXRAudioSettings#Instance
+    /// field. As such, in order that the value you set persists across you should only ever set this value on that
+    /// static instance, or the object serialized at Assets/Resources/MetaXRAudioSettings.asset.
     [SerializeField]
     public int voiceLimit = 64;
 
     private static MetaXRAudioSettings instance;
+    /// \brief The global plug-in settings as loaded from disk.
+    ///
+    /// This value is null until first access. On first access, it is read from Assets/Resources/MetaXRAudioSettings.asset.
+    ///
+    /// If that file doesn't exist, it will be created and populated with defaults.
+    ///
+    /// You can create the asset in the content browser manually and as long as it is named correctly and at the correct path, the settings in that asset are the ones used/applied.
     public static MetaXRAudioSettings Instance
     {
         get

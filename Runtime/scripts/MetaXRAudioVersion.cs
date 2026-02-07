@@ -27,6 +27,9 @@ using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
 
+/// \brief Displays the current version of Meta XR Audio in a debug log on wake-up as a debugging utility.
+///
+/// Under the hoold it simly gets the major/minor/patch version of the DLL that was loaded and displays it.
 public class MetaXRAudioVersion : MonoBehaviour
 {
     void Awake()
