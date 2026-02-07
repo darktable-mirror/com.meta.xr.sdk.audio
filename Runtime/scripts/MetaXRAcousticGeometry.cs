@@ -223,9 +223,16 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     [NonSerialized]
     internal IntPtr geometryHandle = IntPtr.Zero;
 
+    internal enum LoadState
+    {
+        NotLoaded,
+        Loading,
+        Interrupted,
+        Loaded
+    }
     [NonSerialized]
-    private bool isLoaded = false;
-    internal bool IsLoaded => isLoaded;
+    internal LoadState loadState_ = LoadState.NotLoaded;
+    internal bool IsLoaded => (loadState_ == LoadState.Loaded);
 
     [NonSerialized]
     private int vertexCount = -1;
@@ -267,7 +274,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     internal bool StartInternal()
     {
         if (!CreatePropagationGeometry())
+        {
             return false;
+        }
 
         // Make sure the geometry has current transform matrix.
         ApplyTransform();
@@ -301,25 +310,32 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 #if UNITY_EDITOR
         if (!Application.isPlaying)
         {
-            if (!GatherGeometryEditor(geometryHandle, gameObject, gameObject.transform.worldToLocalMatrix))
-                return false;
+            // In editor alway attempt to gather geometry rather than load from file
+            if (GatherGeometryEditor(geometryHandle, gameObject, gameObject.transform.worldToLocalMatrix))
+            {
+                return true;
+            }
         }
-        else
 # endif
         if (FileEnabled)
         {
             if (string.IsNullOrEmpty(relativeFilePath))
             {
-                Debug.LogError("No file set, make sure to Bake Mesh to File", gameObject);
+                if (Application.isPlaying)
+                {
+                    Debug.LogError("No file set, make sure to Bake Mesh to File", gameObject);
+                }
                 return false;
             }
             else
             {
                 if (!ReadFile())
+                {
                     return false;
+                }
             }
         }
-        else
+        else if (Application.isPlaying)
         {
             if (gameObject.isStatic)
             {
@@ -329,7 +345,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
             else
             {
                 if (!GatherGeometryRuntime())
+                {
                     return false;
+                }
             }
         }
 
@@ -340,16 +358,35 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     {
         ++EnabledGeometryCount;
         if (EnabledGeometryCount == 1)
+        {
             OnAnyGeometryEnabled();
+        }
     }
 
-    void DecrementEnabledGeometryCount() => --EnabledGeometryCount;
+    void DecrementEnabledGeometryCount()
+    {
+        Debug.Assert(EnabledGeometryCount > 0);
+        --EnabledGeometryCount;
+    }
 
     /// Called when enabled.
     void OnEnable()
     {
-        if (geometryHandle == IntPtr.Zero || (!isLoaded && FileEnabled))
+#if META_XR_ACOUSTIC_INFO
+        Debug.Log($"Enabling Geometry: handle={geometryHandle}, loadState={loadState_}, FileEnabled={FileEnabled}", gameObject);
+#endif
+
+        if (loadState_ == LoadState.Interrupted)
+        {
+            Debug.Log($"Resuming interrupted load!!");
+            ReadFile();
             return;
+        }
+
+        if (geometryHandle == IntPtr.Zero || ((loadState_ == LoadState.NotLoaded) && FileEnabled))
+        {
+            return;
+        }
 
         Debug.Log($"Enabling Geometry: {relativeFilePath}", gameObject);
 
@@ -357,22 +394,39 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         ApplyTransform();
         Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.STATIC, gameObject.isStatic);
 
-        IncrementEnabledGeometryCount();
+        if (IsLoaded)
+        {
+            IncrementEnabledGeometryCount();
+        }
     }
 
     /// Called when disabled.
     void OnDisable()
     {
+#if META_XR_ACOUSTIC_INFO
+        Debug.Log($"Disabling Geometry: handle={geometryHandle}, loadState={loadState_}, FileEnabled={FileEnabled}", gameObject);
+#endif
+
         if (geometryHandle == IntPtr.Zero)
+        {
             return;
+        }
 
         Debug.Log($"Disabling Geometry: {relativeFilePath}", gameObject);
+        if (loadState_ == LoadState.Loading && !gameObject.activeInHierarchy)
+        {
+            Debug.Log($"Interrupted load!!");
+            loadState_ = LoadState.Interrupted;
+        }
 
         Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.ENABLED, false);
         ApplyTransform();
         Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.STATIC, gameObject.isStatic);
 
-        DecrementEnabledGeometryCount();
+        if (IsLoaded)
+        {
+            DecrementEnabledGeometryCount();
+        }
     }
 
 
@@ -381,7 +435,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     private void LateUpdate()
     {
         if (geometryHandle == IntPtr.Zero)
+        {
             return;
+        }
 
         if (transform.hasChanged)
         {
@@ -395,7 +451,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     private void ApplyTransform()
     {
         if (geometryHandle == IntPtr.Zero)
+        {
             return;
+        }
 
         Native.Interface.AudioGeometrySetTransform(geometryHandle, transform.localToWorldMatrix);
     }
@@ -411,7 +469,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     internal bool DestroyInternal()
     {
         if (!DestroyPropagationGeometry())
+        {
             return false;
+        }
 
         return true;
     }
@@ -506,7 +566,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
             {
                 Mesh sharedMesh = meshFilter.sharedMesh;
                 if (sharedMesh == null)
+                {
                     continue;
+                }
 
                 if (ignoreStatic && (!sharedMesh.isReadable || transform.gameObject.isStatic))
                 {
@@ -519,8 +581,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 
             // Gather the terrains.
             foreach (Terrain terrain in terrains)
+            {
                 this.terrains.Add(new TerrainMaterial() { terrain = terrain, terrainMaterials = currentMaterials });
-
+            }
             return currentMaterials;
         }
 
@@ -1299,24 +1362,24 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
             var activeMaterials = transform.GetComponents<MetaXRAcousticMaterial>().Where(x => x.enabled);
             IMaterialDataProvider[] materials = Array.ConvertAll(activeMaterials.ToArray(), x => x);
 
-            if ( useColliders )
+            if (useColliders)
             {
                 MeshCollider[] meshColliders = transform.GetComponents<MeshCollider>();
                 BoxCollider[] boxColliders = transform.GetComponents<BoxCollider>();
 
                 foreach (MeshCollider mc in meshColliders)
                 {
-                    if( CheckMeshTime( mc.sharedMesh, transform.gameObject ) )
+                    if (CheckMeshTime(mc.sharedMesh, transform.gameObject))
                     {
                         return null;
                     }
                 }
 
                 // Include transform in hash if it has any relevant components.
-                if ( (meshColliders != null && meshColliders.Length > 0) || (boxColliders != null && boxColliders.Length > 0) ||
-                    (materials != null && materials.Length > 0) )
+                if ((meshColliders != null && meshColliders.Length > 0) || (boxColliders != null && boxColliders.Length > 0) ||
+                    (materials != null && materials.Length > 0))
                 {
-                    AppendTransformHash( ref hash, transform );
+                    AppendTransformHash(ref hash, transform);
                 }
             }
             else
@@ -1326,25 +1389,25 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 
                 foreach (MeshFilter meshFilter in meshes)
                 {
-                    if( CheckMeshTime( meshFilter.sharedMesh, transform.gameObject ) )
+                    if (CheckMeshTime(meshFilter.sharedMesh, transform.gameObject))
                     {
                         return null;
                     }
                 }
 
                 // Include transform in hash if it has any relevant components.
-                if ( (meshes != null && meshes.Length > 0) || (terrains != null && terrains.Length > 0) ||
-                    (materials != null && materials.Length > 0) )
+                if ((meshes != null && meshes.Length > 0) || (terrains != null && terrains.Length > 0) ||
+                    (materials != null && materials.Length > 0))
                 {
-                    AppendTransformHash( ref hash, transform );
+                    AppendTransformHash(ref hash, transform);
                 }
             }
             return null;
         }
 
-        private bool CheckMeshTime( Mesh mesh, GameObject obj )
+        private bool CheckMeshTime(Mesh mesh, GameObject obj)
         {
-            if ( mesh != null )
+            if (mesh != null)
             {
                 string meshPath = UnityEditor.AssetDatabase.GetAssetPath(mesh);
                 DateTime lastModified = System.IO.File.Exists(meshPath) ? System.IO.File.GetLastWriteTime(meshPath) : DateTime.MinValue;
@@ -1374,7 +1437,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         return ageChecker.isOlder || ageChecker.hash != HierarchyHash;
     }
 
-    private static void AppendTransformHash( ref Hash128 hash, Transform transform )
+    private static void AppendTransformHash(ref Hash128 hash, Transform transform)
     {
         hash.Append(transform.position.x);
         hash.Append(transform.position.y);
@@ -1400,15 +1463,15 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         {
             var activeMaterials = transform.GetComponents<MetaXRAcousticMaterial>().Where(x => x.enabled);
             IMaterialDataProvider[] materials = Array.ConvertAll(activeMaterials.ToArray(), x => x);
-            if ( useColliders )
+            if (useColliders)
             {
                 MeshCollider[] meshColliders = transform.GetComponents<MeshCollider>();
                 BoxCollider[] boxColliders = transform.GetComponents<BoxCollider>();
                 // Include transform in hash if it has any relevant components.
-                if ( (meshColliders != null && meshColliders.Length > 0) || (boxColliders != null && boxColliders.Length > 0) ||
-                    (materials != null && materials.Length > 0) )
+                if ((meshColliders != null && meshColliders.Length > 0) || (boxColliders != null && boxColliders.Length > 0) ||
+                    (materials != null && materials.Length > 0))
                 {
-                    AppendTransformHash( ref _hash, transform );
+                    AppendTransformHash(ref _hash, transform);
                 }
             }
             else
@@ -1416,10 +1479,10 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
                 MeshFilter[] meshes = transform.GetComponents<MeshFilter>();
                 Terrain[] terrains = transform.GetComponents<Terrain>();
                 // Include transform in hash if it has any relevant components.
-                if ( (meshes != null && meshes.Length > 0) || (terrains != null && terrains.Length > 0) ||
-                    (materials != null && materials.Length > 0) )
+                if ((meshes != null && meshes.Length > 0) || (terrains != null && terrains.Length > 0) ||
+                    (materials != null && materials.Length > 0))
                 {
-                    AppendTransformHash( ref _hash, transform );
+                    AppendTransformHash(ref _hash, transform);
                 }
             }
             return null;
@@ -1432,7 +1495,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 
     internal void AppendHash(ref Hash128 hash)
     {
-        HashAppender hashAppender = new HashAppender(hash,useColliders);
+        HashAppender hashAppender = new HashAppender(hash, useColliders);
         traverseMeshHierarchy(gameObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, null, hashAppender);
         hash = hashAppender.Hash;
     }
@@ -1440,7 +1503,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     internal Hash128 ComputeHash()
     {
         Hash128 hash = new Hash128();
-        AppendHash( ref hash );
+        AppendHash(ref hash);
         return hash;
     }
 
@@ -1468,7 +1531,8 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
             ++counter;
 
             // sanity check to prevent hang
-            if (counter > 10000) {
+            if (counter > 10000)
+            {
                 Debug.LogError("Unable to find suitable file name", gameObject);
                 return "";
             }
@@ -1617,6 +1681,8 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         var unityWebRequest = UnityEngine.Networking.UnityWebRequest.Get(path);
         Profiler.EndSample();
 
+        loadState_ = LoadState.Loading;
+
         yield return unityWebRequest.SendWebRequest();
         if (!string.IsNullOrEmpty(unityWebRequest.error))
         {
@@ -1667,12 +1733,22 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
             UpdateGizmoMesh();
 #endif
 
-            isLoaded = true;
+            loadState_ = LoadState.Loaded;
 
             if (isActiveAndEnabled)
             {
+
+#if META_XR_ACOUSTIC_INFO
+                Debug.Log($"Enabling Geometry after load");
+#endif
                 IncrementEnabledGeometryCount();
             }
+#if META_XR_ACOUSTIC_INFO
+            else
+            {
+                Debug.Log($"*NOT* enabling Geometry after load! activeSelf={gameObject.activeSelf}, activeHeirarchy={gameObject.activeInHierarchy}");
+            }
+#endif
         }
         else
         {

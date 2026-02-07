@@ -33,7 +33,6 @@ using Debug = UnityEngine.Debug;
 class MetaXRAudioPluginUpdater
 {
     private static bool restartPending = false;
-    private static bool unityRunningInBatchmode = false;
     private const string rootDir = "Assets/Meta/XR/Audio";
     private const string binaryName = "MetaXRAudioUnity.dll";
 
@@ -46,11 +45,6 @@ class MetaXRAudioPluginUpdater
 
     static void OnDelayCall()
     {
-        if (System.Environment.CommandLine.Contains("-batchmode"))
-        {
-            unityRunningInBatchmode = true;
-        }
-
         if (ShouldAttemptPluginUpdate())
         {
             AttemptSpatializerPluginUpdate(true);
@@ -81,7 +75,7 @@ class MetaXRAudioPluginUpdater
 
     private static bool ShouldAttemptPluginUpdate()
     {
-        if (unityRunningInBatchmode)
+        if (Application.isBatchMode)
         {
             return false;
         }
@@ -224,7 +218,7 @@ class MetaXRAudioPluginUpdater
         {
             bool userAcceptsUpdate = false;
 
-            if (unityRunningInBatchmode)
+            if (Application.isBatchMode)
             {
                 userAcceptsUpdate = true;
             }
@@ -356,14 +350,14 @@ class MetaXRAudioPluginUpdater
 
                 if (upgradeDone)
                 {
-                    if (unityRunningInBatchmode
+                    if (Application.isBatchMode
                         || EditorUtility.DisplayDialog("Restart Unity",
                             "Meta XR Audio plugins has been upgraded."
-                                + "\n\nPlease restart the Unity Editor to complete the update process."
+                            + "\n\nPlease restart the Unity Editor to complete the update process."
 #if !UNITY_2017_1_OR_NEWER
  + " You may need to manually relaunch Unity if you are using Unity 5.6 and higher."
 #endif
-,
+                            ,
                             "Restart",
                             "Not Now"))
                     {
@@ -376,7 +370,7 @@ class MetaXRAudioPluginUpdater
 
     private static void RestartUnityEditor()
     {
-        if (unityRunningInBatchmode)
+        if (Application.isBatchMode)
         {
             EditorApplication.Exit(0);
         }

@@ -153,6 +153,9 @@ internal class MetaXRAcousticMap : MonoBehaviour
     [NonSerialized]
     internal IntPtr mapHandle = IntPtr.Zero;
 
+    [NonSerialized]
+    private Action delayedEnable = null;
+
 #if UNITY_EDITOR
     internal string RelativeFilePath => string.IsNullOrEmpty(relativeFilePath) ? GenerateSuggestedPath() : relativeFilePath;
 #else
@@ -603,18 +606,27 @@ internal class MetaXRAcousticMap : MonoBehaviour
             Debug.Log($"Sucessfully loaded Acoustic Map {name}, load time = {loadDuration}", gameObject);
 
             // Delay enabling map until any geometry is loaded
-            Action delayedEnable = null;
             delayedEnable = () =>
             {
                 MetaXRAcousticGeometry.OnAnyGeometryEnabled -= delayedEnable;
-                Debug.Log("Delayed enable");
+                Debug.Log("Delayed enable", gameObject);
                 Native.Interface.AudioSceneIRSetEnabled(mapHandle, isActiveAndEnabled);
             };
 
             if (MetaXRAcousticGeometry.EnabledGeometryCount > 0)
+            {
+#if META_XR_ACOUSTIC_INFO
+                Debug.Log("Geometry loaded, enabling map", gameObject);
+#endif
                 Native.Interface.AudioSceneIRSetEnabled(mapHandle, isActiveAndEnabled);
+            }
             else
+            {
+#if META_XR_ACOUSTIC_INFO
+                Debug.Log("No Geometry Loaded, awaiting geo to enable map", gameObject);
+#endif
                 MetaXRAcousticGeometry.OnAnyGeometryEnabled += delayedEnable;
+            }
 
             IsLoaded = true;
         }
@@ -674,6 +686,8 @@ internal class MetaXRAcousticMap : MonoBehaviour
     {
         if (mapHandle == IntPtr.Zero)
             return;
+
+        MetaXRAcousticGeometry.OnAnyGeometryEnabled -= delayedEnable;
 
         Debug.Log($"Disabling AcousticMap: {RelativeFilePath}");
         Native.Interface.AudioSceneIRSetEnabled(mapHandle, false);

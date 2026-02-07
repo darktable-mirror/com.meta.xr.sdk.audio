@@ -296,7 +296,7 @@ public class MetaXRAcousticNativeInterface
         }
         catch
         {
-            Debug.LogError("Unable to located MetaXRAudio plugin for MetaXRAcoustics!\n" +
+            Debug.LogError("Unable to locate MetaXRAudio plugin for MetaXRAcoustics!\n" +
                 "If you're using Unity audio make sure you have imported the MetaXRAudioUnity package\n" +
                 "If you're using Wwise or FMOD make sure you have their Unity integration in your project and the MetaXRAudioWwise or MetaXRAudioFMOD plugins in correct location in the Assets folder");
         }
@@ -591,7 +591,7 @@ public class MetaXRAcousticNativeInterface
         /// \brief Generate the default values for the parameters of an Acoustic Map object.
         ///
         /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
-        ///        
+        ///
         /// \param[out] parameters The initialized parameters with default values
         /// \return Returns an ovrResult indicating success or failure
         ///
