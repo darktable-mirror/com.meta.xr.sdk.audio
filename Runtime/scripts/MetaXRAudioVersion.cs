@@ -38,7 +38,7 @@ public class MetaXRAudioVersion : MonoBehaviour
         int minor = 0;
         int patch = 0;
 
-        MetaXRAudio_GetVersion(ref major, ref minor, ref patch);
+        MetaXRAudio_Unity_GetVersion(ref major, ref minor, ref patch);
 
         String version = System.String.Format($"MetaXRAudio Version: {major}.{minor}.{patch}");
 
@@ -47,5 +47,5 @@ public class MetaXRAudioVersion : MonoBehaviour
 
     // Import functions
     [DllImport(MetaXRAudioNativeInterface.UnityNativeInterface.binaryName)]
-    private static extern void MetaXRAudio_GetVersion(ref int Major, ref int Minor, ref int Patch);
+    private static extern void MetaXRAudio_Unity_GetVersion(ref int Major, ref int Minor, ref int Patch);
 }

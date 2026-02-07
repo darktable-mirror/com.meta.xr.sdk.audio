@@ -89,6 +89,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     [SerializeField]
     internal MeshFlags Flags = MeshFlags.ENABLE_SIMPLIFICATION;
 
+    [NonSerialized]
+    internal bool gatherGeometry_ = true;
+
     internal bool EnableSimplification
     {
         get => (Flags & MeshFlags.ENABLE_SIMPLIFICATION) != 0;
@@ -291,8 +294,8 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     {
         if (geometryHandle != IntPtr.Zero)
         {
-            Debug.LogWarning("Tried to initialize geometry twice, destroying stale copy", gameObject);
-            DestroyPropagationGeometry();
+            Debug.LogWarning("Geometry already exists, skipping", gameObject);
+            return true;
         }
 
         if (geometryHandle != IntPtr.Zero)
@@ -308,7 +311,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
 
 #if UNITY_EDITOR
-        if (!Application.isPlaying)
+        if (!Application.isPlaying && gatherGeometry_)
         {
             // In editor alway attempt to gather geometry rather than load from file
             if (GatherGeometryEditor(geometryHandle, gameObject, gameObject.transform.worldToLocalMatrix))
@@ -316,7 +319,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
                 return true;
             }
         }
-# endif
+#endif
         if (FileEnabled)
         {
             if (string.IsNullOrEmpty(relativeFilePath))
@@ -342,7 +345,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
                 Debug.LogError("Static geometry requires \"File Enabled\"", gameObject);
                 return false;
             }
-            else
+            else if (gatherGeometry_)
             {
                 if (!GatherGeometryRuntime())
                 {
@@ -1696,7 +1699,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         LoadGeometryFromMemory(unityWebRequest.downloadHandler.nativeData);
     }
 
-    async void LoadGeometryFromMemory(Unity.Collections.NativeArray<byte>.ReadOnly data)
+    internal async void LoadGeometryFromMemory(Unity.Collections.NativeArray<byte>.ReadOnly data)
     {
         if (data.Length == 0)
             return;

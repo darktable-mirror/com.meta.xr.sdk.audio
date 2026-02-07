@@ -49,7 +49,7 @@ public class MetaXRAudioSource : MonoBehaviour
     static void OnBeforeSceneLoadRuntimeMethod()
     {
         Debug.Log($"Setting spatial voice limit: {MetaXRAudioSettings.Instance.voiceLimit}");
-        MetaXRAudio_SetGlobalVoiceLimit(MetaXRAudioSettings.Instance.voiceLimit);
+        MetaXRAudio_Unity_SetGlobalVoiceLimit(MetaXRAudioSettings.Instance.voiceLimit);
     }
 
     [SerializeField]
@@ -274,5 +274,5 @@ public class MetaXRAudioSource : MonoBehaviour
     }
 
     [System.Runtime.InteropServices.DllImport(MetaXRAudioNativeInterface.UnityNativeInterface.binaryName)]
-    private static extern int MetaXRAudio_SetGlobalVoiceLimit(int VoiceLimit);
+    private static extern int MetaXRAudio_Unity_SetGlobalVoiceLimit(int VoiceLimit);
 }

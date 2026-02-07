@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static MetaXRAudioRoomAcousticProperties;
 
 /// \brief Class that provides easy control over the shoebox room simulation.
 ///
@@ -191,56 +192,57 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
         MetaXRAudioNativeInterface.Interface.SetRoomClutterFactor(clutterFactorBands);
     }
 
-    void SetWallMaterialPreset(int wallIndex, MaterialPreset materialPreset)
+    public static float[] GetMaterialPresetBands(MaterialPreset preset)
     {
-        switch (materialPreset)
+        switch (preset)
         {
-            case MaterialPreset.AcousticTile: SetWallMaterialProperties(wallIndex, 0.488168418f, 0.361475229f, 0.339595377f, 0.498946249f); break;
-            case MaterialPreset.Brick: SetWallMaterialProperties(wallIndex, 0.975468814f, 0.972064495f, 0.949180186f, 0.930105388f); break;
-            case MaterialPreset.BrickPainted: SetWallMaterialProperties(wallIndex, 0.975710571f, 0.983324170f, 0.978116691f, 0.970052719f); break;
-            case MaterialPreset.Cardboard: SetWallMaterialProperties(wallIndex, 0.590000f, 0.435728f, 0.251650f, 0.208000f); break;
-            case MaterialPreset.Carpet: SetWallMaterialProperties(wallIndex, 0.987633705f, 0.905486643f, 0.583110571f, 0.351053834f); break;
-            case MaterialPreset.CarpetHeavy: SetWallMaterialProperties(wallIndex, 0.977633715f, 0.859082878f, 0.526479602f, 0.370790422f); break;
-            case MaterialPreset.CarpetHeavyPadded: SetWallMaterialProperties(wallIndex, 0.910534739f, 0.530433178f, 0.294055820f, 0.270105422f); break;
-            case MaterialPreset.CeramicTile: SetWallMaterialProperties(wallIndex, 0.990000010f, 0.990000010f, 0.982753932f, 0.980000019f); break;
-            case MaterialPreset.Concrete: SetWallMaterialProperties(wallIndex, 0.990000010f, 0.983324170f, 0.980000019f, 0.980000019f); break;
-            case MaterialPreset.ConcreteRough: SetWallMaterialProperties(wallIndex, 0.989408433f, 0.964494646f, 0.922127008f, 0.900105357f); break;
-            case MaterialPreset.ConcreteBlock: SetWallMaterialProperties(wallIndex, 0.635267377f, 0.652230680f, 0.671053469f, 0.789051592f); break;
-            case MaterialPreset.ConcreteBlockPainted: SetWallMaterialProperties(wallIndex, 0.902957916f, 0.940235913f, 0.917584062f, 0.919947326f); break;
-            case MaterialPreset.Curtain: SetWallMaterialProperties(wallIndex, 0.686494231f, 0.545859993f, 0.310078561f, 0.399473131f); break;
-            case MaterialPreset.Foliage: SetWallMaterialProperties(wallIndex, 0.518259346f, 0.503568292f, 0.578688800f, 0.690210819f); break;
-            case MaterialPreset.Glass: SetWallMaterialProperties(wallIndex, 0.655915797f, 0.800631821f, 0.918839693f, 0.923488140f); break;
-            case MaterialPreset.GlassHeavy: SetWallMaterialProperties(wallIndex, 0.827098966f, 0.950222731f, 0.974604130f, 0.980000019f); break;
-            case MaterialPreset.Grass: SetWallMaterialProperties(wallIndex, 0.881126285f, 0.507170796f, 0.131893098f, 0.0103688836f); break;
-            case MaterialPreset.Gravel: SetWallMaterialProperties(wallIndex, 0.729294717f, 0.373122454f, 0.255317450f, 0.200263441f); break;
-            case MaterialPreset.GypsumBoard: SetWallMaterialProperties(wallIndex, 0.721240044f, 0.927690148f, 0.934302270f, 0.910105407f); break;
-            case MaterialPreset.Marble: SetWallMaterialProperties(wallIndex, 0.990000f, 0.990000f, 0.982754f, 0.980000f); break;
-            case MaterialPreset.Mud: SetWallMaterialProperties(wallIndex, 0.844084f, 0.726577f, 0.794683f, 0.849737f); break;
-            case MaterialPreset.PlasterOnBrick: SetWallMaterialProperties(wallIndex, 0.975696504f, 0.979106009f, 0.961063504f, 0.950052679f); break;
-            case MaterialPreset.PlasterOnConcreteBlock: SetWallMaterialProperties(wallIndex, 0.881774724f, 0.924773932f, 0.951497555f, 0.959947288f); break;
-            case MaterialPreset.Rubber: SetWallMaterialProperties(wallIndex, 0.950000f, 0.916621f, 0.936230f, 0.950000f); break;
-            case MaterialPreset.Soil: SetWallMaterialProperties(wallIndex, 0.844084203f, 0.634624243f, 0.416662872f, 0.400000036f); break;
-            case MaterialPreset.SoundProof: SetWallMaterialProperties(wallIndex, 0.000000000f, 0.000000000f, 0.000000000f, 0.000000000f); break;
-            case MaterialPreset.Snow: SetWallMaterialProperties(wallIndex, 0.532252669f, 0.154535770f, 0.0509644151f, 0.0500000119f); break;
-            case MaterialPreset.Steel: SetWallMaterialProperties(wallIndex, 0.793111682f, 0.840140402f, 0.925591767f, 0.979736567f); break;
-            case MaterialPreset.Stone: SetWallMaterialProperties(wallIndex, 0.980000f, 0.978740f, 0.955701f, 0.950000f); break;
-            case MaterialPreset.Vent: SetWallMaterialProperties(wallIndex, 0.847042f, 0.620450f, 0.702170f, 0.799473f); break;
-            case MaterialPreset.Water: SetWallMaterialProperties(wallIndex, 0.970588267f, 0.971753478f, 0.978309572f, 0.970052719f); break;
-            case MaterialPreset.WoodThin: SetWallMaterialProperties(wallIndex, 0.592423141f, 0.858273327f, 0.917242289f, 0.939999998f); break;
-            case MaterialPreset.WoodThick: SetWallMaterialProperties(wallIndex, 0.812957883f, 0.895329595f, 0.941304684f, 0.949947298f); break;
-            case MaterialPreset.WoodFloor: SetWallMaterialProperties(wallIndex, 0.852366328f, 0.898992121f, 0.934784114f, 0.930052698f); break;
-            case MaterialPreset.WoodOnConcrete: SetWallMaterialProperties(wallIndex, 0.959999979f, 0.941232264f, 0.937923789f, 0.930052698f); break;
-            case MaterialPreset.MetaDefault: SetWallMaterialProperties(wallIndex, 0.9f, 0.9f, 0.9f, 0.9f); break;
-                //default:
-                //    break;
+            case MaterialPreset.AcousticTile: return new float[] { 0.488168418f, 0.361475229f, 0.339595377f, 0.498946249f };
+            case MaterialPreset.Brick: return new float[] { 0.975468814f, 0.972064495f, 0.949180186f, 0.930105388f };
+            case MaterialPreset.BrickPainted: return new float[] { 0.975710571f, 0.983324170f, 0.978116691f, 0.970052719f };
+            case MaterialPreset.Cardboard: return new float[] { 0.590000f, 0.435728f, 0.251650f, 0.208000f };
+            case MaterialPreset.Carpet: return new float[] { 0.987633705f, 0.905486643f, 0.583110571f, 0.351053834f };
+            case MaterialPreset.CarpetHeavy: return new float[] { 0.977633715f, 0.859082878f, 0.526479602f, 0.370790422f };
+            case MaterialPreset.CarpetHeavyPadded: return new float[] { 0.910534739f, 0.530433178f, 0.294055820f, 0.270105422f };
+            case MaterialPreset.CeramicTile: return new float[] { 0.990000010f, 0.990000010f, 0.982753932f, 0.980000019f };
+            case MaterialPreset.Concrete: return new float[] { 0.990000010f, 0.983324170f, 0.980000019f, 0.980000019f };
+            case MaterialPreset.ConcreteRough: return new float[] { 0.989408433f, 0.964494646f, 0.922127008f, 0.900105357f };
+            case MaterialPreset.ConcreteBlock: return new float[] { 0.635267377f, 0.652230680f, 0.671053469f, 0.789051592f };
+            case MaterialPreset.ConcreteBlockPainted: return new float[] { 0.902957916f, 0.940235913f, 0.917584062f, 0.919947326f };
+            case MaterialPreset.Curtain: return new float[] { 0.686494231f, 0.545859993f, 0.310078561f, 0.399473131f };
+            case MaterialPreset.Foliage: return new float[] { 0.518259346f, 0.503568292f, 0.578688800f, 0.690210819f };
+            case MaterialPreset.Glass: return new float[] { 0.655915797f, 0.800631821f, 0.918839693f, 0.923488140f };
+            case MaterialPreset.GlassHeavy: return new float[] { 0.827098966f, 0.950222731f, 0.974604130f, 0.980000019f };
+            case MaterialPreset.Grass: return new float[] { 0.881126285f, 0.507170796f, 0.131893098f, 0.0103688836f };
+            case MaterialPreset.Gravel: return new float[] { 0.729294717f, 0.373122454f, 0.255317450f, 0.200263441f };
+            case MaterialPreset.GypsumBoard: return new float[] { 0.721240044f, 0.927690148f, 0.934302270f, 0.910105407f };
+            case MaterialPreset.Marble: return new float[] { 0.990000f, 0.990000f, 0.982754f, 0.980000f };
+            case MaterialPreset.Mud: return new float[] { 0.844084f, 0.726577f, 0.794683f, 0.849737f };
+            case MaterialPreset.PlasterOnBrick: return new float[] { 0.975696504f, 0.979106009f, 0.961063504f, 0.950052679f };
+            case MaterialPreset.PlasterOnConcreteBlock: return new float[] { 0.881774724f, 0.924773932f, 0.951497555f, 0.959947288f };
+            case MaterialPreset.Rubber: return new float[] { 0.950000f, 0.916621f, 0.936230f, 0.950000f };
+            case MaterialPreset.Soil: return new float[] { 0.844084203f, 0.634624243f, 0.416662872f, 0.400000036f };
+            case MaterialPreset.SoundProof: return new float[] { 0.000000000f, 0.000000000f, 0.000000000f, 0.000000000f };
+            case MaterialPreset.Snow: return new float[] { 0.532252669f, 0.154535770f, 0.0509644151f, 0.0500000119f };
+            case MaterialPreset.Steel: return new float[] { 0.793111682f, 0.840140402f, 0.925591767f, 0.979736567f };
+            case MaterialPreset.Stone: return new float[] { 0.980000f, 0.978740f, 0.955701f, 0.950000f };
+            case MaterialPreset.Vent: return new float[] { 0.847042f, 0.620450f, 0.702170f, 0.799473f };
+            case MaterialPreset.Water: return new float[] { 0.970588267f, 0.971753478f, 0.978309572f, 0.970052719f };
+            case MaterialPreset.WoodThin: return new float[] { 0.592423141f, 0.858273327f, 0.917242289f, 0.939999998f };
+            case MaterialPreset.WoodThick: return new float[] { 0.812957883f, 0.895329595f, 0.941304684f, 0.949947298f };
+            case MaterialPreset.WoodFloor: return new float[] { 0.852366328f, 0.898992121f, 0.934784114f, 0.930052698f };
+            case MaterialPreset.WoodOnConcrete: return new float[] { 0.959999979f, 0.941232264f, 0.937923789f, 0.930052698f };
+            case MaterialPreset.MetaDefault: return new float[] { 0.9f, 0.9f, 0.9f, 0.9f };
+            default: return new float[] { 0.9f, 0.9f, 0.9f, 0.9f };
         }
     }
-    void SetWallMaterialProperties(int wallIndex, float band0, float band1, float band2, float band3)
+
+    void SetWallMaterialPreset(int wallIndex, MaterialPreset materialPreset)
     {
-        wallMaterials[wallIndex * 4 + 0] = band0;
-        wallMaterials[wallIndex * 4 + 1] = band1;
-        wallMaterials[wallIndex * 4 + 2] = band2;
-        wallMaterials[wallIndex * 4 + 3] = band3;
+        float[] bands = GetMaterialPresetBands(materialPreset);
+        wallMaterials[wallIndex * 4 + 0] = bands[0];
+        wallMaterials[wallIndex * 4 + 1] = bands[1];
+        wallMaterials[wallIndex * 4 + 2] = bands[2];
+        wallMaterials[wallIndex * 4 + 3] = bands[3];
     }
 
 

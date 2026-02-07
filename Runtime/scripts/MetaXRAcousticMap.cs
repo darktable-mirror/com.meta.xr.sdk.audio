@@ -576,7 +576,7 @@ internal class MetaXRAcousticMap : MonoBehaviour
         LoadMapFromMemory(unityWebRequest.downloadHandler.nativeData);
     }
 
-    async void LoadMapFromMemory(Unity.Collections.NativeArray<byte>.ReadOnly data)
+    internal async void LoadMapFromMemory(Unity.Collections.NativeArray<byte>.ReadOnly data)
     {
         if (data.Length == 0)
             return;
