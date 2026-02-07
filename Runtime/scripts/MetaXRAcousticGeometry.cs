@@ -87,7 +87,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 
     /// The flags for how the mesh is computed.
     [SerializeField]
-    internal MeshFlags Flags = MeshFlags.ENABLE_SIMPLIFICATION | MeshFlags.ENABLE_DIFFRACTION;
+    internal MeshFlags Flags = MeshFlags.ENABLE_SIMPLIFICATION;
 
     internal bool EnableSimplification
     {

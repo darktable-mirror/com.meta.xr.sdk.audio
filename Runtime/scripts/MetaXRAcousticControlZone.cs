@@ -44,6 +44,8 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
     internal class State
     {
         [SerializeField]
+        internal Color color = Color.blue;
+        [SerializeField]
         /// \brief Adjusts the reverb decay time of points inside the zone
         internal Spectrum rt60 = new Spectrum();
         [SerializeField]
@@ -54,15 +56,19 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
         internal float fadeDistance = 1.0f;
         internal void Clone(State other)
         {
+            color = other.color;
             reverbLevel.Clone(other.reverbLevel);
             rt60.Clone(other.rt60);
             fadeDistance = other.fadeDistance;
+
         }
     }
 
     [SerializeField]
     private State _state = new State();
     internal State state => _state;
+
+    internal Color ZoneColor { get => _state.color; set => _state.color = value; }
 
     internal Spectrum Rt60 { get => _state.rt60; set => _state.rt60 = value; }
 
@@ -235,7 +241,7 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
     private void drawDebug(bool selected)
     {
         Gizmos.matrix = transform.localToWorldMatrix;
-        Color baseColor = selected ? new Color(0.0f, 1.0f, 1.0f, 1.0f) : new Color(0.0f, 0.5f, 0.5f, 1.0f);
+        Color baseColor = ZoneColor;
 
         // Box outline
         Gizmos.color = baseColor;

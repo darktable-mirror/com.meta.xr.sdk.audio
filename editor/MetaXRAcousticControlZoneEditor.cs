@@ -141,7 +141,8 @@ internal sealed class MetaXRAcousticControlZoneEditor : Editor
         MetaXRAcousticControlZone control = target as MetaXRAcousticControlZone;
 
         EditorGUI.BeginChangeCheck();
-        
+
+        Color newColor = EditorGUILayout.ColorField(control.ZoneColor);
         float newFadeDistance = EditorGUILayout.FloatField(new GUIContent("Fade Distance", "The distance margin that is used to fade out the control's influence near the box boundaries"), control.FadeDistance);
 
         // Draw spectrum editors.
@@ -155,7 +156,8 @@ internal sealed class MetaXRAcousticControlZoneEditor : Editor
 
             if (groupName == MetaXRAudioSpectrumEditor.pointAddedGroupName)
                 Undo.CollapseUndoOperations(Undo.GetCurrentGroup() - 1);
-            
+
+            control.ZoneColor = newColor;
             control.FadeDistance = Mathf.Max(newFadeDistance, 0.0f);
 
             // Ensure that the gizmos are redrawn after editing the box.

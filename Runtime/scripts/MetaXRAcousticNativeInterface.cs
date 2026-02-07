@@ -36,7 +36,7 @@ namespace Meta.XR.Acoustics
         Automatic = -1, ///< Automatically select highest quality (if geometry is set the propagation system will be active, otherwise if the callback is set dynamic room modeling is enabled, otherwise fallback to the static shoe box)
         None = 0, ///< Disable all acoustics features
         ShoeboxRoom = 1, ///< Room defined by RoomAcousticProperties (MetaXRRoomAcoustic components)
-        RaytracedAcoustics = 3, ///< Geometry, Material based propagation system (MetaXRAcoustic components)
+        AcousticRayTracing = 3, ///< Geometry, Material based propagation system (MetaXRAcoustic components)
     }
 
     [Flags]

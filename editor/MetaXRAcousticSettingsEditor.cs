@@ -142,7 +142,7 @@ class MetaXRAcousticSettingsProvider : SettingsProvider
 
         EditorGUILayout.PropertyField(serializableSettings.FindProperty("acousticModel"), new GUIContent("Acoustic Model"));
         bool propagationEnabled = settings.AcousticModel == Meta.XR.Acoustics.AcousticModel.Automatic ||
-            settings.AcousticModel == Meta.XR.Acoustics.AcousticModel.RaytracedAcoustics;
+            settings.AcousticModel == Meta.XR.Acoustics.AcousticModel.AcousticRayTracing;
         EditorGUI.BeginDisabledGroup(!propagationEnabled);
         EditorGUILayout.PropertyField(serializableSettings.FindProperty("diffractionEnabled"), new GUIContent("Diffraction Enabled"));
         string[] newTags = ExcludeTagAsFlagsField(settings.ExcludeTags);
