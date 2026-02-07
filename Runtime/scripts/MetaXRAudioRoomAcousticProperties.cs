@@ -158,7 +158,9 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
     [RuntimeInitializeOnLoadMethod]
     static void CheckSceneHasRoom()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         MetaXRAudioRoomAcousticProperties[] rooms = FindObjectsOfType<MetaXRAudioRoomAcousticProperties>();
+#pragma warning restore CS0618 // Type or member is obsolete
         if (rooms.Length == 0)
         {
             Debug.Log("No Meta XR Audio Room found, setting default room");
@@ -254,7 +256,9 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
         {
             if (!currentListener)
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 currentListener = FindObjectOfType<AudioListener>();
+#pragma warning restore CS0618 // Type or member is obsolete
                 if(!currentListener)
                 {
                     Debug.LogWarning("No Listener Found in Scene to attach room gizmo , Please setup atleast one listener!");

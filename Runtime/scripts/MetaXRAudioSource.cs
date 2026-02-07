@@ -248,6 +248,12 @@ public class MetaXRAudioSource : MonoBehaviour
         /// When 1, no direct sound will propagate from the source if there is obstruction between the source and listener.
         /// 1 is the most realistic setting and the default.
         P_OCCLUSION_INTENSITY,
+        /// \brief If enabled and using Acoustic Ray Tracing, medium absorption will be applied to the source over distance
+        ///
+        /// This control only applies when Acoustic Ray Tracing is being used.
+        /// When enabled, the audio source will apply frequency specific attenuation over distance as a result of the medium the sound travels through (air for example).
+        /// When disabled, no medium specific frequency attenuation will be applied over distance.
+        P_MEDIUM_ABSORPTION,
         /// \brief Utility to easily query how many parameters the plugin has.
         P_NUM
     };

@@ -214,6 +214,26 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         }
     }
 
+    [SerializeField]
+    [Tooltip("This switch can disable direct sound propagation, so only late reverberations is heard from this source")]
+    private bool mediumAbsorption = true;
+    /// \brief If enabled and using Acoustic Ray Tracing, medium absorption will be applied to the source over distance
+    ///
+    /// This control only applies when Acoustic Ray Tracing is being used.
+    /// When enabled, the audio source will apply frequency specific attenuation over distance as a result of the medium the sound travels through (air for example).
+    /// When disabled, no medium specific frequency attenuation will be applied over distance.
+    public bool MediumAbsorption
+    {
+        get
+        {
+            return mediumAbsorption;
+        }
+        set
+        {
+            mediumAbsorption = value;
+        }
+    }
+
     private void OnValidate()
     {
         volumetricRadius = Mathf.Max(volumetricRadius, 0.0f);
@@ -255,6 +275,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_REVERB_REACH, reverbReach);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECT_ENABLED, directSoundEnabled ? 1.0f : 0.0f);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_OCCLUSION_INTENSITY, occlusionIntensity);
+        source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_MEDIUM_ABSORPTION, mediumAbsorption ? 1.0f : 0.0f);
     }
 
     // Import functions
