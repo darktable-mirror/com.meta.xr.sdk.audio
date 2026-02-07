@@ -24,16 +24,20 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
+	<key>DTPlatformBuild</key>
+	<string>23C53</string>
 	<key>DTPlatformName</key>
 	<string>macosx</string>
 	<key>DTPlatformVersion</key>
-	<string>14.4</string>
+	<string>14.2</string>
+	<key>DTSDKBuild</key>
+	<string>23C53</string>
 	<key>DTSDKName</key>
-	<string>macosx14.4</string>
+	<string>macosx14.2</string>
 	<key>DTXcode</key>
-	<string>1530</string>
+	<string>1510</string>
 	<key>DTXcodeBuild</key>
-	<string>15E204a</string>
+	<string>15C65</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.15</string>
 	<key>LSRequiresIPhoneOS</key>
