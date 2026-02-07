@@ -55,7 +55,7 @@ public class MetaXRAudioNativeInterface
         IntPtr temp;
         try
         {
-            WwisePluginInterface.ovrAudio_GetPluginContext(out temp, ClientType.OVRA_CLIENT_TYPE_WWISE_UNKNOWN);
+            temp = WwisePluginInterface.getOrCreateGlobalOvrAudioContext();
             Debug.Log("Meta XR Audio Native Interface initialized with Wwise plugin");
             return new WwisePluginInterface();
         }
@@ -68,16 +68,6 @@ public class MetaXRAudioNativeInterface
             FMODPluginInterface.ovrAudio_GetPluginContext(out temp, ClientType.OVRA_CLIENT_TYPE_FMOD);
             Debug.Log("Meta XR Audio Native Interface initialized with FMOD plugin");
             return new FMODPluginInterface();
-        }
-        catch (System.DllNotFoundException)
-        {
-            // this is fine
-        }
-        try
-        {
-            temp = MunroInterface.getOrCreateGlobalOvrAudioContext();
-            Debug.Log("Meta XR Audio Native Interface initialized with Munro plugin");
-            return new MunroInterface();
         }
         catch (System.DllNotFoundException)
         {
@@ -243,9 +233,30 @@ public class MetaXRAudioNativeInterface
     /***********************************************************************************/
     public class WwisePluginInterface : NativeInterface
     {
+#if true // Wwise Object Endpoint Sink Plugin
         // The name used for the plugin DLL.
-        public const string binaryName = "OculusSpatializerWwise";
+        public const string binaryName = "MetaXRAudioWwise";
+        /***********************************************************************************/
+        // Context API: Required to create internal context if it does not exist yet
+        IntPtr context_ = IntPtr.Zero;
 
+        IntPtr context
+        {
+            get
+            {
+                if (context_ == IntPtr.Zero)
+                {
+                    context_ = getOrCreateGlobalOvrAudioContext();
+                }
+                return context_;
+            }
+        }
+
+        [DllImport(binaryName)]
+        public static extern IntPtr getOrCreateGlobalOvrAudioContext();
+
+#else // Oculus Spatializer Wwise Mixer Plugin
+        public const string binaryName = "OculusEndpoint";
         /***********************************************************************************/
         // Context API: Required to create internal context if it does not exist yet
         IntPtr context_ = IntPtr.Zero;
@@ -253,7 +264,7 @@ public class MetaXRAudioNativeInterface
 
         [DllImport(binaryName)]
         public static extern int ovrAudio_GetPluginContext(out IntPtr context, uint clientType);
-
+#endif
         /***********************************************************************************/
         // Shoebox Reflections API
         [DllImport(binaryName)]
@@ -345,7 +356,7 @@ public class MetaXRAudioNativeInterface
     public class FMODPluginInterface : NativeInterface
     {
         // The name used for the plugin DLL.
-        public const string binaryName = "OculusSpatializerFMOD";
+        public const string binaryName = "MetaXRAudioFMOD";
 
         /***********************************************************************************/
         // Context API: Required to create internal context if it does not exist yet
@@ -354,147 +365,6 @@ public class MetaXRAudioNativeInterface
 
         [DllImport(binaryName)]
         public static extern int ovrAudio_GetPluginContext(out IntPtr context, uint clientType);
-
-        /***********************************************************************************/
-        // Shoebox Reflections API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetAdvancedBoxRoomParametersUnity(IntPtr context, float width, float height, float depth,
-            bool lockToListenerPosition, float positionX, float positionY, float positionZ,
-            float[] wallMaterials);
-        public int SetAdvancedBoxRoomParameters(float width, float height, float depth,
-            bool lockToListenerPosition, Vector3 position, float[] wallMaterials)
-        {
-            return ovrAudio_SetAdvancedBoxRoomParametersUnity(context, width, height, depth,
-                lockToListenerPosition, position.x, position.y, -position.z, wallMaterials);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetRoomClutterFactor(IntPtr context, float[] clutterFactor);
-        public int SetRoomClutterFactor(float[] clutterFactor)
-        {
-            return ovrAudio_SetRoomClutterFactor(context, clutterFactor);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetReflectionModel(IntPtr context, int model);
-
-        public int SetReflectionModel(int model)
-        {
-            return ovrAudio_SetReflectionModel(context, model);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_Enable(IntPtr context, int what, int enable);
-        public int SetEnabled(int feature, bool enabled)
-        {
-            return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_Enable(IntPtr context, EnableFlag what, int enable);
-        public int SetEnabled(EnableFlag feature, bool enabled)
-        {
-            return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetDynamicRoomRaysPerSecond(IntPtr context, int RaysPerSecond);
-        public int SetDynamicRoomRaysPerSecond(int RaysPerSecond)
-        {
-            return ovrAudio_SetDynamicRoomRaysPerSecond(context, RaysPerSecond);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetDynamicRoomInterpSpeed(IntPtr context, float InterpSpeed);
-        public int SetDynamicRoomInterpSpeed(float InterpSpeed)
-        {
-            return ovrAudio_SetDynamicRoomInterpSpeed(context, InterpSpeed);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetDynamicRoomMaxWallDistance(IntPtr context, float MaxWallDistance);
-        public int SetDynamicRoomMaxWallDistance(float MaxWallDistance)
-        {
-            return ovrAudio_SetDynamicRoomMaxWallDistance(context, MaxWallDistance);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetDynamicRoomRaysRayCacheSize(IntPtr context, int RayCacheSize);
-        public int SetDynamicRoomRaysRayCacheSize(int RayCacheSize)
-        {
-            return ovrAudio_SetDynamicRoomRaysRayCacheSize(context, RayCacheSize);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_GetRoomDimensions(IntPtr context, float[] roomDimensions, float[] reflectionsCoefs, out Vector3 position);
-        public int GetRoomDimensions(float[] roomDimensions, float[] reflectionsCoefs, out Vector3 position)
-        {
-            return ovrAudio_GetRoomDimensions(context, roomDimensions, reflectionsCoefs, out position);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_GetRaycastHits(IntPtr context, Vector3[] points, Vector3[] normals, int length);
-        public int GetRaycastHits(Vector3[] points, Vector3[] normals, int length)
-        {
-            return ovrAudio_GetRaycastHits(context, points, normals, length);
-        }
-    }
-
-
-    /***********************************************************************************/
-    // Munro
-    /***********************************************************************************/
-    public class MunroInterface : NativeInterface
-    {
-        // The name used for the plugin DLL.
-        public const string binaryName = "Audio360CSharp";
-
-        /***********************************************************************************/
-        // Context API: Required to create internal context if it does not exist yet
-        static IntPtr context_ = IntPtr.Zero;
-
-        static void OnDestroyContext(IntPtr context)
-        {
-            // Note: any geometry will not be carried over to a new context!
-            if (context != context_)
-            {
-                Debug.LogError("Context mismatch, current context=" + context_ + ", destroyed context=" + context);
-            }
-
-            setOnDestroyContextCallback(IntPtr.Zero);
-            context_ = IntPtr.Zero;
-        }
-
-        ~MunroInterface()
-        {
-            setOnDestroyContextCallback(IntPtr.Zero);
-        }
-
-        public IntPtr context
-        {
-            get
-            {
-                if (context_ == IntPtr.Zero)
-                {
-                    context_ = getOrCreateGlobalOvrAudioContext();
-                    setOnDestroyContextCallback(OnDestroyContext);
-                }
-
-                return context_;
-            }
-        }
-
-        [DllImport(binaryName)]
-        public static extern IntPtr getOrCreateGlobalOvrAudioContext();
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void OnDestroyContextCallback(IntPtr context);
-
-        [DllImport(binaryName)]
-        private static extern void setOnDestroyContextCallback(OnDestroyContextCallback callback);
-
-        [DllImport(binaryName)]
-        private static extern void setOnDestroyContextCallback(IntPtr callback);
 
         /***********************************************************************************/
         // Shoebox Reflections API
