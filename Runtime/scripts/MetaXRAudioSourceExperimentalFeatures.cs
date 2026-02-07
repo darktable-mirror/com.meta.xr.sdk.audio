@@ -89,6 +89,22 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
     }
 
     [SerializeField]
+    [Tooltip("Intensity controller for Directvity , Value of 1 will apply full directivity")]
+    [Range(0.0f, 1.0f)]
+    private float directivityIntensity = 1.0f;
+    public float DirectivityIntensity
+    {
+        get
+        {
+            return directivityIntensity;
+        }
+        set
+        {
+            directivityIntensity = Mathf.Clamp(value, 0.0f, 1.0f);
+        }
+    }
+
+    [SerializeField]
     [Tooltip("Option for human voice directivity pattern that makes this sound more muffled when the source is facing away from listener")]
     private DirectivityPatternType directivityPattern = DirectivityPatternType.None;
     public  DirectivityPatternType DirectivityPattern
@@ -137,6 +153,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
     public void UpdateParameters()
     {
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_HRTF_INTENSITY, hrtfIntensity);
+        source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECTIVITY_INTENSITY, directivityIntensity);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_RADIUS, volumetricRadius);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_REFLECTIONS_SEND, earlyReflectionsSendDb);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECTIVITY_ENABLED, directivityPattern == DirectivityPatternType.None ? 0.0f : 1.0f);
