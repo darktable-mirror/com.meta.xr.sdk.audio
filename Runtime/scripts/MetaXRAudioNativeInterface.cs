@@ -49,6 +49,18 @@ namespace Meta
 }
 
 /// \brief Parent class that functions as a scope for all the code that wraps binary interfaces for the Unity, Wwise and FMOD plug-ins.
+/// First access of the \ref MetaXRAcousticNativeInterface.Interface member variable will trigger a scan for any Meta XR Audio plugin binaries, which are searched for in the following order (taking the first one found and halting any further search):
+/// 1. Meta XR Audio Plugin for Wwise
+/// 2. Meta XR Audio Plugin for FMOD
+/// 3. Meta XR Audio Plugin for Unity
+///
+/// If none are found or if the found plugin is from an unsuported version, a dummy, do nothing interface (DummyInterface) is returns but attempting to call any of the functions of the returned DummyInterface class have no effect.
+///
+/// \see MetaXRAudioNativeInterface.Interface
+/// \see MetaXRAudioNativeInterface.NativeInterface
+/// \see MetaXRAudioNativeInterface.UnityNativeInterface
+/// \see MetaXRAudioNativeInterface.WwisePluginInterface
+/// \see MetaXRAudioNativeInterface.FMODPluginInterface
 public class MetaXRAudioNativeInterface
 {
     static NativeInterface CachedInterface;
@@ -243,6 +255,10 @@ public class MetaXRAudioNativeInterface
     /***********************************************************************************/
     // UNITY NATIVE
     /***********************************************************************************/
+    /// \brief \ref NativeInterface implementation for the Unity plugin.
+    /// This interface is only instantiated when there is no Wwise or FMOD plugins available, there is a native Unity plugin available, and the found Unity plugin version is greater than the minimum supported version.
+    /// \see MetaXRAudioNativeInterface
+    /// \see NativeInterface
     public class UnityNativeInterface : NativeInterface
     {
         /// \brief Name of the binary this interface wraps.
@@ -351,6 +367,10 @@ public class MetaXRAudioNativeInterface
     /***********************************************************************************/
     // WWISE
     /***********************************************************************************/
+    /// \brief \ref NativeInterface implementation for the Wwise plugin.
+    /// This interface is only instantiated when there is a Wwise plugin available and the found Wwise plugin version is greater than the minimum supported version.
+    /// \see MetaXRAudioNativeInterface
+    /// \see NativeInterface
     public class WwisePluginInterface : NativeInterface
     {
         /// \brief Name of the binary this interface wraps.
@@ -468,6 +488,10 @@ public class MetaXRAudioNativeInterface
     /***********************************************************************************/
     // FMOD
     /***********************************************************************************/
+    /// \brief \ref NativeInterface implementation for the FMOD plugin.
+    /// This interface is only instantiated when there is no Wwise plugin available, there is an FMOD plugin available, and the found FMOD plugin version is greater than the minimum supported version.
+    /// \see MetaXRAudioNativeInterface
+    /// \see NativeInterface
     public class FMODPluginInterface : NativeInterface
     {
         /// \brief Name of the binary this interface wraps.

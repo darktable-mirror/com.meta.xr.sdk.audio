@@ -28,9 +28,8 @@ namespace Meta.XR.Acoustics
     /***********************************************************************************/
     // ENUMS and STRUCTS
     /***********************************************************************************/
-    /// \brief Enumeration of features that can be enabled/disabled.
-    ///
-    /// \see MetaXRAcousticNativeInterface#INativeInterface#SetAcousticModel
+    /// \brief An enumeration of the available acoustic models.
+    /// You can set these models using \ref MetaXRAcousticNativeInterface.INativeInterface.SetAcousticModel
     public enum AcousticModel : int
     {
         Automatic = -1, ///< Automatically select highest quality (if geometry is set the propagation system will be active, otherwise if the callback is set dynamic room modeling is enabled, otherwise fallback to the static shoe box)
@@ -40,9 +39,9 @@ namespace Meta.XR.Acoustics
     }
 
     [Flags]
-    /// \brief Enumeration of features that can be enabled/disabled.
+    /// \brief An enumeration of acoustic features that can be enabled/disabled.
     ///
-    /// \see MetaXRAudioNativeInterface#NativeInterface#SetEnabled
+    /// You can set these properties using \ref MetaXRAudioNativeInterface.NativeInterface.SetEnabled
     public enum EnableFlagInternal : uint
     {
         NONE = 0, ///< Disable all features
@@ -64,7 +63,10 @@ namespace Meta.XR.Acoustics
         QUADS ///< The mesh faces are defined by Quads
     }
 
-    /// \brief The properties for audio materials. All properties are frequency dependent.
+    /// \brief An enumeration of the available properties for audio materials. All properties are frequency dependent.
+    /// These are passed to \ref MetaXRAcousticNativeInterface.INativeInterface.AudioMaterialGetFrequency,
+    /// \ref MetaXRAcousticNativeInterface.INativeInterface.AudioMaterialSetFrequency, and
+    /// \ref MetaXRAcousticNativeInterface.INativeInterface.AudioMaterialReset
     public enum MaterialProperty : uint
     {
         ABSORPTION = 0, ///< The fraction of sound arriving at a surface that is absorbed by the material. This value is in the range 0 to 1, where 0 indicates a perfectly reflective material, and 1 indicates a perfectly absorptive material. Absorption is inversely related to the reverberation time, and has the strongest impact on the acoustics of an environment. The default absorption is 0.1.
@@ -73,6 +75,9 @@ namespace Meta.XR.Acoustics
     }
 
     /// \brief A struct that defines a grouping of mesh faces and the material that should be applied to the faces.
+    /// A mesh group is used by \ref MetaXRAcousticNativeInterface.INativeInterface.AudioGeometryUploadMeshArrays
+    /// and \ref MetaXRAcousticNativeInterface.INativeInterface.AudioGeometryUploadSimplifiedMeshArrays
+    /// to help define the mesh data.
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct MeshGroup
     {
@@ -84,7 +89,8 @@ namespace Meta.XR.Acoustics
     }
 
     [Flags]
-    /// \brief Flags describing the status an Acoustic Map.
+    /// \brief These flags describe whether an Acoustic Map is mapped and ready.
+    /// This status is produced by \ref MetaXRAcousticNativeInterface.INativeInterface.AudioSceneIRGetStatus.
     public enum AcousticMapStatus : uint
     {
         EMPTY = 0, ///< A status flag indicating the Map has no data (i.e. was just created).
@@ -93,7 +99,10 @@ namespace Meta.XR.Acoustics
     }
 
     [Flags]
-    /// \brief The boolean flags for an Acoustic Map.
+    /// \brief These flags describe whether an acoustic map is static, not floating, map only, or diffracted.
+    /// These flags are set on \ref Meta.XR.Acoustics.MapParameters.flags which is passed to
+    /// \ref MetaXRAcousticNativeInterface.INativeInterface.AudioSceneIRComputeCustomPoints
+    /// or \ref MetaXRAcousticNativeInterface.INativeInterface.AudioSceneIRCompute.
     public enum AcousticMapFlags : uint
     {
         NONE = 0, ///< The flag value when no flags are set.
@@ -104,7 +113,8 @@ namespace Meta.XR.Acoustics
     }
 
     [Flags]
-    /// \brief The boolean flags for an audio object.
+    /// \brief These flags describe whether an audio object is not used, enabled, and/or static.
+    /// These flags are passed to \ref MetaXRAcousticNativeInterface.INativeInterface.AudioGeometrySetObjectFlag
     public enum ObjectFlags : uint
     {
         EMPTY = 0, ///< If set, the object is not used within the simulation and will be ignored.
@@ -113,7 +123,9 @@ namespace Meta.XR.Acoustics
     }
 
     [Flags]
-    /// \brief Flags to describe how to render a mesh
+    /// \brief These flags describe whether to simply or diffract a mesh.
+    /// These flags are set on \ref Meta.XR.Acoustics.MeshSimplification.flags,
+    /// which is passed to \ref MetaXRAcousticNativeInterface.INativeInterfaceAudioGeometryUploadSimplifiedMeshArrays.
     public enum MeshFlags : uint
     {
         NONE = 0, ///< This flag indicates none of the other mesh flags are enabled
@@ -122,7 +134,9 @@ namespace Meta.XR.Acoustics
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    /// \brief A struct that describes how a mesh should be simplified.
+    /// \brief A struct that describes how to simply a mesh, including maximum error, diffraction angle, diffraction length, and number of CPUs to use.
+    /// Use this structure in a call to \ref MetaXRAcousticNativeInterface.INativeInterface.AudioGeometryUploadSimplifiedMeshArrays along with a \ref MeshGroup.
+
     public struct MeshSimplification
     {
         public UIntPtr thisSize; /// The size of this structure. You must set this equal to sizeof(ovrAudioMeshSimplification) This will ensure version compatibility
@@ -145,20 +159,30 @@ namespace Meta.XR.Acoustics
     /// \param[out] progress The progress value is in the range [0,1] and indicates the approximate fraction of the operation that has been performed so far, and could be used to display a progress bar.
     /// \param[out] description The string is a NULL-terminated ASCII description of the current task.
     /// \return indicates whether or not to continue processing (non-zero -> continue, zero -> cancel).
+    /// \see Meta.XR.Acoustics.SceneIRCallbacks
     public delegate bool ProgressCallback(IntPtr userData, string description, float progress);
 
     [StructLayout(LayoutKind.Sequential)]
     /// \brief A struct containing callback functions used when computing an Acoustic Map.
+    /// The callback functions should be valid for the lifetime of the compute operation, e.g. the function pointer and user data should be valid for as long as \ref INativeInterface.AudioSceneIRCompute or \ref INativeInterface.AudioSceneIRComputeCustomPoints are running.
+    /// \see MetaXRAcousticNativeInterface.INativeInterface.AudioSceneIRCompute
+    /// \see MetaXRAcousticNativeInterface.INativeInterface.AudioSceneIRComputeCustomPoints
+    /// \see ProgressCallback
     public struct SceneIRCallbacks
     {
-        public IntPtr userData; /// A pointer to arbitrary user data that is passed into the callback functions.
+        public IntPtr userData; /// A pointer to arbitrary user data that is passed into the callback functions. Can be null. \see ProgressCallback
 
         [MarshalAs(UnmanagedType.FunctionPtr)]
-        public ProgressCallback progress; /// A pointer to function that reports the computation progress to a GUI.
+        public ProgressCallback progress; /// A pointer to function that reports the computation progress to a GUI. Should not be null. \see ProgressCallback
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    /// \brief A struct that describes how an Acoustic Map is computed.
+    /// \brief A struct that describes how an Acoustic Map should be computed, including minimum and maximum resolution, head height, maximum height, and gravity vector.
+    /// These parameters are used in calls to \ref MetaXRAcousticNativeInterface.INativeInterface.InitializeAudioSceneIRParameters,
+    /// \ref MetaXRAcousticNativeInterface.INativeInterface.AudioSceneIRCompute, and
+    /// \ref MetaXRAcousticNativeInterface.INativeInterface.AudioSceneIRComputeCustomPoints.
+    /// \see Meta.XR.Acoustics.SceneIRCallbacks
+    /// \see Meta.XR.Acoustics.AcousticMapFlags
     public struct MapParameters
     {
         public UIntPtr thisSize; /// A value that should be set to the size in bytes of the ovrAudioSceneIRParameters structure. This is used for backward/forward compatibility. = sizeof(ovrAudioSceneIRParameters)
@@ -169,7 +193,7 @@ namespace Meta.XR.Acoustics
         [MarshalAs(UnmanagedType.U4)]
         public AcousticMapFlags flags; /// Flags that describe how an Acoustic Map should be computed.
 
-        public float minResolution; /// The minimum point placement resolution, expressed in meters. This determines the smallest spacing of points in the scene, as well as the smallest space that will be considered as part of the precomputation. This should be a little bit smaller than the smallest possible space that the listener can traverse. Note that decreasing this value doesn't necessarily result in more densely-sampled points - the number of points is more clostly related to the number of distinct acoustic spaces in the scene.
+        public float minResolution; /// The minimum point placement resolution, expressed in meters. This determines the smallest spacing of points in the scene, as well as the smallest space that will be considered as part of the precomputation. This should be a little bit smaller than the smallest possible space that the listener can traverse. Note that decreasing this value doesn't necessarily result in more densely-sampled points - the number of points is more closely related to the number of distinct acoustic spaces in the scene.
         public float maxResolution; /// The maximum point placement resolution, expressed in meters. This determines the largest spacing of points in the scene. Decreasing this value improves the quality for large open scenes, but also increases the precomputation time and storage required.
 
         public float headHeight; /// The typical height in meters of the listener's head above floor surfaces. This is used to determine where to vertically place probe points in the scene. The quality will be best for sources and listeners that are around this height.
@@ -180,7 +204,9 @@ namespace Meta.XR.Acoustics
         public float gravityVectorZ; /// The Z value in a 3D unit vector indicating the downward direction in the scene. This is used to cull probe points that are irrelevant because they are too high above the floor surface. In a Y-up world, this should be {0,-1,0}, while Z-up would be {0,0,-1}.
     }
 
-    /// \brief The properties of an audio control Zone.
+    /// \brief The properties of an audio control Zone. All properties can be frequency dependent.
+    /// \see MetaXRAcousticNativeInterface.INativeInterface.ControlZoneSetFrequency
+    /// \see MetaXRAcousticNativeInterface.INativeInterface.ControlZoneReset
     public enum ControlZoneProperty : uint
     {
         RT60 = 0, ///< A frequency-dependent property describing the reverberation time adjustment in the Zone. The value represents a signed additive adjustment to the simulated reverb time (units: seconds).
@@ -189,6 +215,18 @@ namespace Meta.XR.Acoustics
 }
 
 /// \brief Parent class that functions as a scope for all the code that wraps binary interfaces for the Unity, Wwise and FMOD plug-ins.
+/// First access of the MetaXRAcousticNativeInterface.Interface member variable will trigger a scan for any Meta XR Audio plugin binaries, which are searched for in the following order (taking the first one found and halting any further search):
+/// 1. Meta XR Audio Plugin for Wwise
+/// 2. Meta XR Audio Plugin for FMOD
+/// 3. Meta XR Audio Plugin for Unity
+///
+/// If none are found or if the found plugin is from an unsuported version, a dummy, do nothing interface (DummyInterface) is returns but attempting to call any of the functions of the returned DummyInterface class have no effect.
+///
+/// \see MetaXRAcousticNativeInterface.Interface
+/// \see MetaXRAcousticNativeInterface.INativeInterface
+/// \see UnityNativeInterface
+/// \see WwisePluginInterface
+/// \see FMODPluginInterface
 public class MetaXRAcousticNativeInterface
 {
     static INativeInterface CachedInterface;
@@ -200,9 +238,8 @@ public class MetaXRAcousticNativeInterface
     /// 2. Meta XR Audio Plugin for FMOD
     /// 3. Meta XR Audio Plugin for Unity
     ///
-    /// If none are found, Unity is assumed, but attempting to call any of the functions of the returned `NativeInterface` class result in undefined behavior.
+    /// If none are found or if the found plugin is from an unsuported version, a dummy, do nothing interface (DummyInterface) is returns but attempting to call any of the functions of the returned DummyInterface class have no effect.
     ///
-    /// \see NativeInterface
     /// \see UnityNativeInterface
     /// \see WwisePluginInterface
     /// \see FMODPluginInterface
@@ -295,7 +332,7 @@ public class MetaXRAcousticNativeInterface
         ///
         /// \param Model[in] The reflection model to use (default is Automatic)
         ///
-        /// \see AcousticModel
+        /// \see Meta.XR.Acoustics.AcousticModel
         int SetAcousticModel(AcousticModel model);
 
         /// \brief Reset the reverb and cut off reverb tails. It might be useful to call this
@@ -312,32 +349,49 @@ public class MetaXRAcousticNativeInterface
         /// \param feature specific property to query
         /// \param enabled bool specifying if the feature should be enabled
         /// \return Returns an ovrResult indicating success or failure
+        /// \see Meta.XR.Acoustics.EnableFlagInternal
         int SetEnabled(int feature, bool enabled);
+
+        /// \brief Turn on and off specific features of the library
+        ///
+        /// \param feature A specific property to query
+        /// \param enabled A bool specifying if the feature should be enabled
+        /// \return Returns an ovrResult indicating success or failure
+        /// \see Meta.XR.Acoustics.EnableFlagInternal
         int SetEnabled(EnableFlagInternal feature, bool enabled);
 
         /***********************************************************************************/
         // Geometry API
-        /// \brief Create a geometry object
+        /// \brief Create a geometry object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.DestroyAudioGeometry to destroy it.
         ///
         /// \param[out] geometry A pointer to the created geometry object
         /// \return Returns an ovrResult indicating success or failure
+        /// \see MetaXRAcousticNativeInterface.INativeInterface.DestroyAudioGeometry
         int CreateAudioGeometry(out IntPtr geometry);
 
-        /// \brief Destroy a geometry object
+        /// \brief Destroy a geometry object created by \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry.
         ///
         /// \param[in] geometry A pointer to the geometry object that should be destroyed
         /// \return Returns an ovrResult indicating success or failure
+        /// \see MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry
         int DestroyAudioGeometry(IntPtr geometry);
 
-        /// \brief Set the properties of a geometry object
+        /// \brief Set the properties of a geometry object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
         ///
         /// \param[in] geometry A pointer to the geometry object
         /// \param[in] flag The property about the geometry to be set
         /// \param[in] enabled bool specifying if the feature should be enabled
         /// \return Returns an ovrResult indicating success or failure
+        /// \see Meta.XR.Acoustics.ObjectFlags
         int AudioGeometrySetObjectFlag(IntPtr geometry, ObjectFlags flag, bool enabled);
 
-        /// \brief Bake mesh data into a geometry object
+        /// \brief Bake mesh data into a geometry object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
         ///
         /// \param[in] geometry A pointer to the geometry object where the mesh data is baked
         /// \param[in] vertices An array of vertices that describe the mesh
@@ -347,12 +401,15 @@ public class MetaXRAcousticNativeInterface
         /// \param[in] groups An array of mesh group data
         /// \param[in] groupCount The number of mesh groups in the groups array
         /// \return Returns an ovrResult indicating success or failure
+        /// \see Meta.XR.Acoustics.MeshGroup
         int AudioGeometryUploadMeshArrays(IntPtr geometry,
                                                         float[] vertices, int vertexCount,
                                                         int[] indices, int indexCount,
                                                         MeshGroup[] groups, int groupCount);
 
-        /// \brief Bake mesh data into a geometry object with simplification flags
+        /// \brief Bake mesh data into a geometry object with simplification flags.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
         ///
         /// \param[in] geometry A pointer to the geometry object where the mesh data is baked
         /// \param[in] vertices An array of vertices that describe the mesh
@@ -363,6 +420,9 @@ public class MetaXRAcousticNativeInterface
         /// \param[in] groupCount The number of mesh groups in the groups array
         /// \param[in] simplification A struct containing flags for mesh simplification
         /// \return Returns an ovrResult indicating success or failure
+        /// \see MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry
+        /// \see Meta.XR.Acoustics.MeshGroup
+        /// \see Meta.XR.Acoustics.MeshSimplification
         int AudioGeometryUploadSimplifiedMeshArrays(IntPtr geometry,
                                                         float[] vertices, int vertexCount,
                                                         int[] indices, int indexCount,
@@ -371,26 +431,34 @@ public class MetaXRAcousticNativeInterface
 
         /// \brief Set the transform of a geometry object
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
+        ///
         /// \param[in] geometry A pointer to the geometry object
         /// \param[in] matrix A 4x4 matrix that contains the transform to apply
         /// \return Returns an ovrResult indicating success or failure
         int AudioGeometrySetTransform(IntPtr geometry, in Matrix4x4 matrix);
 
-        /// \brief Get the transform of a geometry object
+        /// \brief Get the transform of a geometry object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
         ///
         /// \param[in] geometry A pointer to the geometry object
         /// \param[out] matrix A 4x4 matrix that contains the transform currently applied to the geometry
         /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4);
 
-        /// \brief Write a geometry object into a .xrageo file
+        /// \brief Write a geometry object into a .xrageo file.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
         ///
         /// \param[in] geometry A pointer to the geometry object to be written
         /// \param[in] filePath A fully qualified path to which the output file should be written
         /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryWriteMeshFile(IntPtr geometry, string filePath);
 
-        /// \brief Read in baked geometry from a .xrageo file into a geometry object
+        /// \brief Read in baked geometry from a .xrageo file into a geometry object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
         ///
         /// \param[in] geometry A pointer to the geometry object where the file data will be read
         /// \param[in] filePath A fully qualified path to the .xrageo file that should be read
@@ -398,6 +466,8 @@ public class MetaXRAcousticNativeInterface
         int AudioGeometryReadMeshFile(IntPtr geometry, string filePath);
 
         /// \brief Read in geometry data as raw data input stored in an array. This allows alternate file reading methods
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
         ///
         /// \param[in] geometry A pointer to the geometry object where the file data will be read
         /// \param[in] data A pointer to the raw data that should be read
@@ -407,12 +477,16 @@ public class MetaXRAcousticNativeInterface
 
         /// \brief Save the mesh data of a geometry object into an .obj file
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
+        ///
         /// \param[in] geometry A pointer to the geometry object where the mesh data is baked
         /// \param[in] filePath A fully qualified path to which the output file should be written
         /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath);
 
         /// \brief Get the mesh information that is currently saved to a geometry object
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioGeometry to create a geometry object.
         ///
         /// \param[in] geometry A pointer to the geometry object where the mesh data is baked
         /// \param[in] vertices An array of vertices that describe the mesh
@@ -423,57 +497,71 @@ public class MetaXRAcousticNativeInterface
 
         /***********************************************************************************/
         // Material API
-        /// \brief Get the value of a material property at the given frequency
+        /// \brief Get the value of a material property at the given frequency.
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioMaterial to create a material object.
         /// \param[in] material A pointer to the material object
         /// \param[in] property The material property to get
         /// \param[in] frequency The frequency to get the value at
         /// \param[out] value The returned material property at the given frequency
         /// \return Returns an ovrResult indicating success or failure
+        /// \see Meta.XR.Acoustics.MaterialProperty
         int AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value);
 
-        /// \brief Create a new material object
+        /// \brief Create a new material object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.DestroyAudioMaterial to destroy this material.
         ///
         /// \param[out] material A pointer to the newly created material object
         /// \return Returns an ovrResult indicating success or failure
         int CreateAudioMaterial(out IntPtr material);
 
-        /// \brief Destroy a material object
+        /// \brief Destroy a material object created by \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioMaterial to create an audio material.
         ///
         /// \param[in] material A pointer to the material object to be destroyed
         /// \return Returns an ovrResult indicating success or failure
         int DestroyAudioMaterial(IntPtr material);
 
-        /// \brief Set the value of a material property at the given frequency
+        /// \brief Set the value of a material property at the given frequency.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioMaterial to create an audio material.
         ///
         /// \param[in] material A pointer to the material object
         /// \param[in] property The material property to set
         /// \param[in] frequency The frequency to set the value at
         /// \param[in] value The desired value of the material property at the given frequency
         /// \return Returns an ovrResult indicating success or failure
+        /// \see Meta.XR.Acoustics.MaterialProperty
         int AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value);
 
-        /// \brief Remove all the set values for a material property
+        /// \brief Remove all the set values for a material property.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioMaterial to create an audio material.
         ///
         /// \param[in] material A pointer to the material object
         /// \param[in] property The material property to get
         /// \return Returns an ovrResult indicating success or failure
+        /// \see Meta.XR.Acoustics.MaterialProperty
         int AudioMaterialReset(IntPtr material, MaterialProperty property);
         /***********************************************************************************/
         // Acoustic Map API
-        /// \brief Create a new Acoustic Map object
+        /// \brief Create a new Acoustic Map object.
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.DestroyAudioSceneIR to destroy the object.
         /// \param[out] sceneIR A pointer to the newly created Acoustic Map object
         /// \return Returns an ovrResult indicating success or failure
         int CreateAudioSceneIR(out IntPtr sceneIR);
 
-        /// \brief Destroy an Acoustic Map object
+        /// \brief Destroy an Acoustic Map object created by \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object to be destroyed
         /// \return Returns an ovrResult indicating success or failure
+        /// \see MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR
         int DestroyAudioSceneIR(IntPtr sceneIR);
 
-        /// \brief Set an Acoustic Map object to be enabled or disabled
+        /// \brief Set an Acoustic Map object to be enabled or disabled.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[in] enabled bool specifying if the Acoustic Map should be enabled or disabled
@@ -482,6 +570,8 @@ public class MetaXRAcousticNativeInterface
 
         /// \brief Get whether an Acoustic Map object is enabled or disabled
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
+        ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[out] enabled bool specifying if the Acoustic Map is be enabled or disabled
         /// \return Returns an ovrResult indicating success or failure
@@ -489,31 +579,39 @@ public class MetaXRAcousticNativeInterface
 
         /// \brief Get the current computation status of an Acoustic Map object
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
+        ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[out] status The current computation status of the Acoustic Map object
         /// \return Returns an ovrResult indicating success or failure
         ///
-        /// \see AcousticMapStatus
+        /// \see Meta.XR.Acoustics.AcousticMapStatus
         int AudioSceneIRGetStatus(IntPtr sceneIR, out AcousticMapStatus status);
 
-        /// \brief Generate the default values for the parameters of an Acoustic Map object
+        /// \brief Generate the default values for the parameters of an Acoustic Map object.
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
+        ///        
         /// \param[out] parameters The initialized parameters with default values
         /// \return Returns an ovrResult indicating success or failure
         ///
-        /// \see MapParameters
+        /// \see Meta.XR.Acoustics.MapParameters
         int InitializeAudioSceneIRParameters(out MapParameters parameters);
 
-        /// \brief Bake an Acoustic Map given particular parameters. It will use automatically generated points
+        /// \brief Bake an Acoustic Map given particular parameters. It will use automatically generated points.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[out] parameters The parameters to be used for the baking
         /// \return Returns an ovrResult indicating success or failure
         ///
-        /// \see MapParameters
+        /// \see Meta.XR.Acoustics.MapParameters
         int AudioSceneIRCompute(IntPtr sceneIR, ref MapParameters parameters);
 
-        /// \brief Bake an Acoustic Map given particular parameters. It will use custom points
+        /// \brief Bake an Acoustic Map given particular parameters. It will use custom points.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[in] points An array of custom points to be used for the baking
@@ -521,18 +619,22 @@ public class MetaXRAcousticNativeInterface
         /// \param[out] parameters The parameters to be used for the baking
         /// \return Returns an ovrResult indicating success or failure
         ///
-        /// \see MapParameters
+        /// \see Meta.XR.Acoustics.MapParameters
         int AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
             float[] points, UIntPtr pointCount, ref MapParameters parameters);
 
-        /// \brief Get the number of points used in the Acoustic Map
+        /// \brief Get the number of points used in the Acoustic Map.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[out] pointCount The number of points in the Acoustic Map
         /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount);
 
-        /// \brief Get the exact points used in the Acoustic Map
+        /// \brief Get the exact points used in the Acoustic Map.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[out] points An array of the points used in the Acoustic Map
@@ -540,35 +642,45 @@ public class MetaXRAcousticNativeInterface
         /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount);
 
-        /// \brief Set the transform of an Acoustic Map object
+        /// \brief Set the transform of an Acoustic Map object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[in] matrix The transform to apply represented in a 4x4 matrix
         /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRSetTransform(IntPtr sceneIR, in Matrix4x4 matrix);
 
-        /// \brief Get the transform currently applied to an Acoustic Map object
+        /// \brief Get the transform currently applied to an Acoustic Map object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[out] matrix4x4 The transform currently applied to the Acoustic Map represented in a 4x4 matrix
         /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRGetTransform(IntPtr sceneIR, out float[] matrix4x4);
 
-        /// \brief Write an Acoustic Map into a .xramap file
+        /// \brief Write an Acoustic Map into a .xramap file.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[in] filePath A fully qualified path to which the output file should be written
         /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRWriteFile(IntPtr sceneIR, string filePath);
 
-        /// \brief Read a .xramap file into an Acoustic Map object
+        /// \brief Read a .xramap file into an Acoustic Map object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[in] filePath A fully qualified path which the .xramap file that should be read from
         /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRReadFile(IntPtr sceneIR, string filePath);
 
-        /// \brief Read a raw data array into an Acoustic Map object. Allows for alternate file reading methods
+        /// \brief Read a raw data array into an Acoustic Map object. This allows you to use alternate file reading methods.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateAudioSceneIR to create an Acoustic Map Object.
         ///
         /// \param[in] sceneIR A pointer to the Acoustic Map object
         /// \param[in] data A pointer to the raw data that should be read
@@ -578,40 +690,53 @@ public class MetaXRAcousticNativeInterface
 
         /***********************************************************************************/
         // Control Zone API
-        /// \brief Create a new Control Zone object
+        /// \brief Create a new Control Zone object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.DestroyControlZone
+        /// to destroy the object.
         ///
         /// \param[out] control A pointer to the Control Zone object
         /// \return Returns an ovrResult indicating success or failure
         int CreateControlZone(out IntPtr control);
 
-        /// \brief Destroy a new Control Zone object
+        /// \brief Destroy a new Control Zone object created by
+        /// \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone.
         ///
         /// \param[in] control A pointer to the Control Zone object
         /// \return Returns an ovrResult indicating success or failure
+
         int DestroyControlZone(IntPtr control);
 
-        /// \brief Enable or Disable Control Zone object
+        /// \brief Enable or Disable Control Zone object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
         ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[in] enabled bool specifying if the Control Zone should be enabled or disabled
         /// \return Returns an ovrResult indicating success or failure
         int ControlZoneSetEnabled(IntPtr control, bool enabled);
 
-        /// \brief Get whether a Control Zone object is enabled or disabled
+        /// \brief Get whether a Control Zone object is enabled or disabled.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
         ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[out] enabled bool specifying if the Control Zone is enabled or disabled
         /// \return Returns an ovrResult indicating success or failure
         int ControlZoneGetEnabled(IntPtr control, out bool enabled);
 
-        /// \brief Set the transform of a Control Zone object
+        /// \brief Set the transform of a Control Zone object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
         ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[in] matrix The transform to apply represented in a 4x4 matrix
         /// \return Returns an ovrResult indicating success or failure
         int ControlZoneSetTransform(IntPtr control, in Matrix4x4 matrix);
 
-        /// \brief Get the transform currently applied to a Control Zone object
+        /// \brief Get the transform currently applied to a Control Zone object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
         ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[out] matrix4x4 The transform currently applied to the Control Zone represented in a 4x4 matrix
@@ -620,14 +745,19 @@ public class MetaXRAcousticNativeInterface
 
         /// \brief Set the boundaries of a Control Zone object.
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
+        ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[in] sizeX The width of the boundary
         /// \param[in] sizeY The height of the boundary
         /// \param[in] sizeZ The depth of the boundary
         /// \return Returns an ovrResult indicating success or failure
+        /// \see MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone
         int ControlZoneSetBox(IntPtr control, float sizeX, float sizeY, float sizeZ);
 
         /// \brief Get the boundaries of a Control Zone object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
         ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[out] sizeX The size of the boundary along the x axis
@@ -638,6 +768,8 @@ public class MetaXRAcousticNativeInterface
 
         /// \brief Set the distance to fade outward from the boundaries of a Control Zone object.
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
+        ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[in] fadeX The amount of fade in the x direction
         /// \param[in] fadeY The amount of fade in the y direction
@@ -646,6 +778,8 @@ public class MetaXRAcousticNativeInterface
         int ControlZoneSetFadeDistance(IntPtr control, float fadeX, float fadeY, float fadeZ);
 
         /// \brief Get the distance to fade outward from the boundaries of a Control Zone object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
         ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[out] fadeX The amount of fade in the x direction
@@ -656,6 +790,8 @@ public class MetaXRAcousticNativeInterface
 
         /// \brief Set a property of the Control Zone object for a particular frequency
         ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
+        ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[in] property The property of the Control Zone to set
         /// \param[in] frequency The frequency to change the property at in Hz
@@ -663,7 +799,9 @@ public class MetaXRAcousticNativeInterface
         /// \return Returns an ovrResult indicating success or failure
         int ControlZoneSetFrequency(IntPtr control, ControlZoneProperty property, float frequency, float value);
 
-        /// \brief Remove all values set for a particular property of a Control Zone object
+        /// \brief Remove all values set for a particular property of a Control Zone object.
+        ///
+        /// Use \ref MetaXRAcousticNativeInterface.INativeInterface.CreateControlZone to create a Control Zone object.
         ///
         /// \param[in] control A pointer to the Control Zone object
         /// \param[in] property The property of the Control Zone to set
@@ -673,6 +811,10 @@ public class MetaXRAcousticNativeInterface
     /***********************************************************************************/
     // UNITY NATIVE
     /***********************************************************************************/
+    /// \brief \ref INativeInterface implementation for the Unity plugin.
+    /// This interface is only instantiated when there is no Wwise or FMOD plugins available, there is a native Unity plugin available, and the found Unity plugin version is greater than the minimum supported version.
+    /// \see MetaXRAcousticNativeInterface
+    /// \see INativeInterface
     public class UnityNativeInterface : INativeInterface
     {
         /// \brief Name of the binary this interface wraps.
@@ -1284,6 +1426,10 @@ public class MetaXRAcousticNativeInterface
     /***********************************************************************************/
     // WWISE
     /***********************************************************************************/
+    /// \brief \ref INativeInterface implementation for the Wwise plugin.
+    /// This interface is only instantiated when there is a Wwise plugin available and the found Wwise plugin version is greater than the minimum supported version.
+    /// \see MetaXRAcousticNativeInterface
+    /// \see INativeInterface
     public class WwisePluginInterface : INativeInterface
     {
         /// \brief Name of the binary this interface wraps.
@@ -1890,6 +2036,10 @@ public class MetaXRAcousticNativeInterface
     /***********************************************************************************/
     // FMOD
     /***********************************************************************************/
+    /// \brief \ref INativeInterface implementation for the FMOD plugin.
+    /// This interface is only instantiated when there is no Wwise plugin available, there is an FMOD plugin available, and the found FMOD plugin version is greater than the minimum supported version.
+    /// \see MetaXRAcousticNativeInterface
+    /// \see INativeInterface
     public class FMODPluginInterface : INativeInterface
     {
         /// \brief Name of the binary this interface wraps.
@@ -2493,6 +2643,11 @@ public class MetaXRAcousticNativeInterface
             }
         }
     }
+
+    /// \brief A dummy \ref INativeInterface implementation that does nothing.
+    /// This interface is only invoked when there is no Meta XR Audio plugin binary available or the first plugin binary found is an unsupported version.
+    /// \see MetaXRAcousticNativeInterface
+    /// \see INativeInterface
     public class DummyInterface : INativeInterface
     {
         /***********************************************************************************/

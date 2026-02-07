@@ -29,6 +29,16 @@ using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 
+/// \brief Component to extend the built-in AudioSource with Meta-specific, experimental features.
+///
+/// Adding this component to any game object that also has an AudioSource component allows specification of
+/// Meta-specific experimental parameters to control how that audio source is rendered.
+///
+/// The public member variables of this class directly control the spatializer plug-in assigned to the accompaning
+/// audio source. The spatializer plug-ins values are updated to the member variable values every call to
+/// MetaXRAudioSourceExperimentalFeatures::Update().
+///
+/// To extend an AudioSource with Meta-specific, non-experimental features, use \ref MetaXRAudioSource.
 [RequireComponent(typeof(MetaXRAudioSource))]
 public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
 {

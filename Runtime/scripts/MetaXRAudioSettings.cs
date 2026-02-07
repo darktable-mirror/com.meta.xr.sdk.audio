@@ -21,7 +21,9 @@
 using UnityEngine;
 using System.Collections;
 
-/// \brief Class used to manage the saving and loading of global plug-in settings.
+/// \brief This class exposes controls for the Meta XR Audio plugin at a project level
+/// You can use this class to programmatically control the acoustics settings for the entire project at runtime. Note any changes made to this data struct will not be written do disk and thus not persist across game loads. Any settings that intended to persist across game loads should be done in the project settings window under the "Meta XR Acoustics" panel.
+/// Use \ref MetaXRAudioSettings.Instance to gain access to the singleton instance of the global project settings.
 #if UNITY_EDITOR
 [UnityEditor.InitializeOnLoad]
 #endif
@@ -33,7 +35,7 @@ public sealed class MetaXRAudioSettings : ScriptableObject
     /// playing the longest) is silenced and the channel is reused for the next voice.
     ///
     /// This values is used in MetaXRAudioSource#OnBeforeSceneLoadRuntimeMethod via the MetaXRAudioSettings#Instance
-    /// field. As such, in order that the value you set persists across you should only ever set this value on that
+    /// field. As such, in order that the value you set persists across game sessions, you should only ever set this value on that
     /// static instance, or the object serialized at Assets/Resources/MetaXRAudioSettings.asset.
     [SerializeField]
     public int voiceLimit = 64;

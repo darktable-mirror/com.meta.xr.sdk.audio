@@ -36,6 +36,9 @@ using System.Runtime.InteropServices;
 /// The public member variables of this class directly control the spatializer plug-in assigned to the accompaning
 /// audio source. The spatializer plug-ins values are updated to the member variable values every call to
 /// MetaXRAudioSource::Update().
+///
+/// To extend an AudioSource with Meta-specific, experimental features, see
+/// \ref MetaXRAudioSourceExperimentalFeatures.
 [RequireComponent(typeof(AudioSource))]
 public class MetaXRAudioSource : MonoBehaviour
 {

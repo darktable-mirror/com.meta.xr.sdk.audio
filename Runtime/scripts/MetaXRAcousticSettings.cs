@@ -28,6 +28,8 @@ using UnityEngine;
 using Native = MetaXRAcousticNativeInterface;
 
 /// \brief This class exposes controls for the Meta XR Acoustics SDK at a project level
+/// You can use this class to programmatically control the acoustics settings for the entire project at runtime. Note any changes made to this data struct will not be written do disk and thus not persist across game loads. Any settings that intended to persist across game loads should be done in the project settings window under the "Meta XR Acoustics" panel.
+/// Use \ref MetaXRAcousticSettings.Instance to gain access to the singleton instance of the global project settings.
 public class MetaXRAcousticSettings : ScriptableObject
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -44,7 +46,7 @@ public class MetaXRAcousticSettings : ScriptableObject
     private AcousticModel acousticModel = Meta.XR.Acoustics.AcousticModel.Automatic;
 
     /// \brief The reflections engine used during runtime
-    /// \see AcousticModel
+    /// \see Meta.XR.Acoustics.AcousticModel
     public AcousticModel AcousticModel
     {
         get => acousticModel;
@@ -106,7 +108,9 @@ public class MetaXRAcousticSettings : ScriptableObject
 
     private static MetaXRAcousticSettings instance;
 
-    /// \brief The singleton instance of the project settings
+    /// \brief The singleton instance of the project settings.
+    /// This instance is project wide and will be automatically created on first access if needed. Any settings that are intended to persist across game loads should be done in the project settings window under the "Meta XR Acoustics" panel.
+    /// See \ref MetaXRAcousticSettings for settings values.
     public static MetaXRAcousticSettings Instance
     {
         get
