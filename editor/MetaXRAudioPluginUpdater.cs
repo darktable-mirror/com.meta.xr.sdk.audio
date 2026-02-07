@@ -105,7 +105,7 @@ class MetaXRAudioPluginUpdater
         }
     }
 
-    [MenuItem("Meta/Tools/Update XR Audio Plugin")]
+    [MenuItem("Meta/Audio/Tools/Update XR Audio Plugin")]
     private static void RunSpatializerPluginUpdate()
     {
         autoUpdateEnabled = true;

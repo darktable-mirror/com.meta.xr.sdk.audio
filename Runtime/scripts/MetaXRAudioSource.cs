@@ -120,22 +120,7 @@ public class MetaXRAudioSource : MonoBehaviour
             }
         }
 
-        bool hasStopped = wasPlaying_ && !source_.isPlaying;
-
-        // Check to see if we should disable spatialization
-        if ((Application.isPlaying == false) ||
-            (AudioListener.pause == true) ||
-            hasStopped ||
-            (source_.isActiveAndEnabled == false)
-        )
-        {
-            source_.spatialize = false;
-            return;
-        }
-        else
-        {
-            UpdateParameters();
-        }
+        UpdateParameters();
 
         wasPlaying_ = source_.isPlaying;
     }

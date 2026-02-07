@@ -118,6 +118,8 @@ public class MetaXRAudioNativeInterface
         // Shoebox Reflections API
         int SetAdvancedBoxRoomParameters(float width, float height, float depth,
             bool lockToListenerPosition, Vector3 position, float[] wallMaterials);
+        int SetSharedReverbWetLevel(float linearLevel);
+        int SetEnabled(int feature, bool enabled);
         int SetRoomClutterFactor(float[] clutterFactor);
         int SetReflectionModel(int reflectionModel);
         int SetDynamicRoomRaysPerSecond(int RaysPerSecond);
@@ -169,6 +171,13 @@ public class MetaXRAudioNativeInterface
         public int SetReflectionModel(int model)
         {
             return ovrAudio_SetReflectionModel(context, model);
+        }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_SetSharedReverbWetLevel(IntPtr context, float linearLevel);
+        public int SetSharedReverbWetLevel(float linearLevel)
+        {
+            return ovrAudio_SetSharedReverbWetLevel(context, linearLevel);
         }
 
         [DllImport(binaryName)]
@@ -287,10 +296,16 @@ public class MetaXRAudioNativeInterface
 
         [DllImport(binaryName)]
         private static extern int ovrAudio_SetReflectionModel(IntPtr context, int model);
-
         public int SetReflectionModel(int model)
         {
             return ovrAudio_SetReflectionModel(context, model);
+        }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_SetSharedReverbWetLevel(IntPtr context, float linearLevel);
+        public int SetSharedReverbWetLevel(float linearLevel)
+        {
+            return ovrAudio_SetSharedReverbWetLevel(context, linearLevel);
         }
 
         [DllImport(binaryName)]
@@ -388,10 +403,16 @@ public class MetaXRAudioNativeInterface
 
         [DllImport(binaryName)]
         private static extern int ovrAudio_SetReflectionModel(IntPtr context, int model);
-
         public int SetReflectionModel(int model)
         {
             return ovrAudio_SetReflectionModel(context, model);
+        }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_SetSharedReverbWetLevel(IntPtr context, float linearLevel);
+        public int SetSharedReverbWetLevel(float linearLevel)
+        {
+            return ovrAudio_SetSharedReverbWetLevel(context, linearLevel);
         }
 
         [DllImport(binaryName)]
