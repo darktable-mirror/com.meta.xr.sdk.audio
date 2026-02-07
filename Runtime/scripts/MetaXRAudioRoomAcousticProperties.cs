@@ -63,11 +63,12 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
     private AudioListener currentListener = null;
 #endif
     float[] wallMaterials = new float[6 * kAudioBandCount];
-    public enum MaterialPreset
+    public enum MaterialPreset : int
     {
-        AcousticTile,
+        AcousticTile = 0,
         Brick,
         BrickPainted,
+        Cardboard,
         Carpet,
         CarpetHeavy,
         CarpetHeavyPadded,
@@ -83,12 +84,17 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
         Grass,
         Gravel,
         GypsumBoard,
+        Marble,
+        Mud,
         PlasterOnBrick,
         PlasterOnConcreteBlock,
+        Rubber,
         Soil,
         SoundProof,
         Snow,
         Steel,
+        Stone,
+        Vent,
         Water,
         WoodThin,
         WoodThick,
@@ -142,6 +148,7 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
             case MaterialPreset.AcousticTile: SetWallMaterialProperties(wallIndex, 0.488168418f, 0.361475229f, 0.339595377f, 0.498946249f); break;
             case MaterialPreset.Brick: SetWallMaterialProperties(wallIndex, 0.975468814f, 0.972064495f, 0.949180186f, 0.930105388f); break;
             case MaterialPreset.BrickPainted: SetWallMaterialProperties(wallIndex, 0.975710571f, 0.983324170f, 0.978116691f, 0.970052719f); break;
+            case MaterialPreset.Cardboard: SetWallMaterialProperties(wallIndex, 0.590000f, 0.435728f, 0.251650f, 0.208000f); break;
             case MaterialPreset.Carpet: SetWallMaterialProperties(wallIndex, 0.987633705f, 0.905486643f, 0.583110571f, 0.351053834f); break;
             case MaterialPreset.CarpetHeavy: SetWallMaterialProperties(wallIndex, 0.977633715f, 0.859082878f, 0.526479602f, 0.370790422f); break;
             case MaterialPreset.CarpetHeavyPadded: SetWallMaterialProperties(wallIndex, 0.910534739f, 0.530433178f, 0.294055820f, 0.270105422f); break;
@@ -157,12 +164,17 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
             case MaterialPreset.Grass: SetWallMaterialProperties(wallIndex, 0.881126285f, 0.507170796f, 0.131893098f, 0.0103688836f); break;
             case MaterialPreset.Gravel: SetWallMaterialProperties(wallIndex, 0.729294717f, 0.373122454f, 0.255317450f, 0.200263441f); break;
             case MaterialPreset.GypsumBoard: SetWallMaterialProperties(wallIndex, 0.721240044f, 0.927690148f, 0.934302270f, 0.910105407f); break;
+            case MaterialPreset.Marble: SetWallMaterialProperties(wallIndex, 0.990000f, 0.990000f, 0.982754f, 0.980000f); break;
+            case MaterialPreset.Mud: SetWallMaterialProperties(wallIndex, 0.844084f, 0.726577f, 0.794683f, 0.849737f); break;
             case MaterialPreset.PlasterOnBrick: SetWallMaterialProperties(wallIndex, 0.975696504f, 0.979106009f, 0.961063504f, 0.950052679f); break;
             case MaterialPreset.PlasterOnConcreteBlock: SetWallMaterialProperties(wallIndex, 0.881774724f, 0.924773932f, 0.951497555f, 0.959947288f); break;
+            case MaterialPreset.Rubber: SetWallMaterialProperties(wallIndex, 0.950000f, 0.916621f, 0.936230f, 0.950000f); break;
             case MaterialPreset.Soil: SetWallMaterialProperties(wallIndex, 0.844084203f, 0.634624243f, 0.416662872f, 0.400000036f); break;
             case MaterialPreset.SoundProof: SetWallMaterialProperties(wallIndex, 0.000000000f, 0.000000000f, 0.000000000f, 0.000000000f); break;
             case MaterialPreset.Snow: SetWallMaterialProperties(wallIndex, 0.532252669f, 0.154535770f, 0.0509644151f, 0.0500000119f); break;
             case MaterialPreset.Steel: SetWallMaterialProperties(wallIndex, 0.793111682f, 0.840140402f, 0.925591767f, 0.979736567f); break;
+            case MaterialPreset.Stone: SetWallMaterialProperties(wallIndex, 0.980000f, 0.978740f, 0.955701f, 0.950000f); break;
+            case MaterialPreset.Vent: SetWallMaterialProperties(wallIndex, 0.847042f, 0.620450f, 0.702170f, 0.799473f); break;
             case MaterialPreset.Water: SetWallMaterialProperties(wallIndex, 0.970588267f, 0.971753478f, 0.978309572f, 0.970052719f); break;
             case MaterialPreset.WoodThin: SetWallMaterialProperties(wallIndex, 0.592423141f, 0.858273327f, 0.917242289f, 0.939999998f); break;
             case MaterialPreset.WoodThick: SetWallMaterialProperties(wallIndex, 0.812957883f, 0.895329595f, 0.941304684f, 0.949947298f); break;

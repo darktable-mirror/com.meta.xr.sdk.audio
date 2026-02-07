@@ -82,6 +82,22 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         }
     }
 
+    [SerializeField]
+    [Tooltip("Adjust how much the direct-to-reverberant ratio increases with distance")]
+    [Range(0.0f, 1.0f)]
+    private float reverbReach = 0.5f;
+    public float ReverbReach
+    {
+        get
+        {
+            return reverbReach;
+        }
+        set
+        {
+            reverbReach = Mathf.Clamp(value, 0.0f, 1.0f);
+        }
+    }
+
     public enum DirectivityPatternType
     {
         None,
@@ -116,6 +132,21 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         set
         {
             directivityPattern = value;
+        }
+    }
+
+    [SerializeField]
+    [Tooltip("This switch can disable direct sound propagation, so only indirect reflections are heard from this source")]
+    private bool directSoundEnabled = true;
+    public bool DirectSoundEnabled
+    {
+        get
+        {
+            return directSoundEnabled;
+        }
+        set
+        {
+            directSoundEnabled = value;
         }
     }
 
@@ -157,6 +188,8 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_RADIUS, volumetricRadius);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_REFLECTIONS_SEND, earlyReflectionsSendDb);
         source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECTIVITY_ENABLED, directivityPattern == DirectivityPatternType.None ? 0.0f : 1.0f);
+        source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_REVERB_REACH, reverbReach);
+        source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECT_ENABLED, directSoundEnabled ? 1.0f : 0.0f);
     }
 
     // Import functions

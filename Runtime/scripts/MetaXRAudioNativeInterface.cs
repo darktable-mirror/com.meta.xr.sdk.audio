@@ -234,7 +234,6 @@ public class MetaXRAudioNativeInterface
     /***********************************************************************************/
     public class WwisePluginInterface : NativeInterface
     {
-#if true // Wwise Object Endpoint Sink Plugin
         // The name used for the plugin DLL.
         public const string binaryName = "MetaXRAudioWwise";
         /***********************************************************************************/
@@ -256,16 +255,6 @@ public class MetaXRAudioNativeInterface
         [DllImport(binaryName)]
         public static extern IntPtr getOrCreateGlobalOvrAudioContext();
 
-#else // Oculus Spatializer Wwise Mixer Plugin
-        public const string binaryName = "OculusEndpoint";
-        /***********************************************************************************/
-        // Context API: Required to create internal context if it does not exist yet
-        IntPtr context_ = IntPtr.Zero;
-        IntPtr context { get { if (context_ == IntPtr.Zero) { ovrAudio_GetPluginContext(out context_, ClientType.OVRA_CLIENT_TYPE_WWISE_UNKNOWN); } return context_; } }
-
-        [DllImport(binaryName)]
-        public static extern int ovrAudio_GetPluginContext(out IntPtr context, uint clientType);
-#endif
         /***********************************************************************************/
         // Shoebox Reflections API
         [DllImport(binaryName)]

@@ -142,6 +142,8 @@ public class MetaXRAudioSource : MonoBehaviour
         P_DIRECTIVITY_ENABLED,
         P_DIRECTIVITY_INTENSITY,
         P_AMBI_DIRECT_ENABLED,
+        P_REVERB_REACH,
+        P_DIRECT_ENABLED,
         P_NUM
     };
 
