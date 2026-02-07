@@ -74,7 +74,7 @@ public class MetaXRAudioSource : MonoBehaviour
 
     [SerializeField]
     [Tooltip("Enables room acoustics simulation (early reflections and reverberation) for this audio source only")]
-    private bool enableAcoustics = false;
+    private bool enableAcoustics = true;
     public  bool EnableAcoustics
     {
         get
@@ -122,7 +122,7 @@ public class MetaXRAudioSource : MonoBehaviour
 
         bool hasStopped = wasPlaying_ && !source_.isPlaying;
 
-        // Check to see if we should disable spatializion
+        // Check to see if we should disable spatialization
         if ((Application.isPlaying == false) ||
             (AudioListener.pause == true) ||
             hasStopped ||
