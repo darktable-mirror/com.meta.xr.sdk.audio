@@ -1203,6 +1203,11 @@ internal class MetaXRAcousticMap : MonoBehaviour
             else
                 return true;
         }
+        else if (!IsLoaded)
+        {
+            // Waiting for async load to complete
+            return true;
+        }
 
         if (mapHandle == IntPtr.Zero)
         {

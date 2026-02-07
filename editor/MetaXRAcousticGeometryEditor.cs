@@ -35,6 +35,28 @@ using UnityEngine;
 public class MetaXRAcousticGeometryEditor : Editor
 {
     private bool showAdvancedControls = false;
+    private bool needsRebake = false;
+
+    private void OnEnable()
+    {
+        MetaXRAcousticGeometry geo = target as MetaXRAcousticGeometry;
+
+        // Determine if the geometry needs rebaking based on time stamp.
+        bool isInvalid = geo.VertexCount == 0;
+        DateTime timeStamp = DateTime.MinValue;
+        string newFilePath = geo.AbsoluteFilePath;
+        if (newFilePath != null)
+        {
+            // Get file time stamp.
+            FileInfo fileInfo = new FileInfo(newFilePath);
+            long fileSize = fileInfo.Exists ? fileInfo.Length : 0;
+            timeStamp = System.IO.File.GetLastWriteTime(newFilePath);
+            isInvalid = isInvalid && (fileSize == 0);
+        }
+
+        // The .IsOlder() function can take a long time. Call it just once when GUI is enabled.
+        needsRebake = isInvalid ? true : geo.IsOlder(timeStamp);
+    }
 
     public override void OnInspectorGUI()
     {
@@ -177,7 +199,7 @@ public class MetaXRAcousticGeometryEditor : Editor
                 normal = new GUIStyleState { textColor = Color.yellow },
             });
         }
-        else if (geo.IsOlder(timeStamp))
+        else if (needsRebake)
         {
             char warning = '\u24D8';
             EditorGUILayout.LabelField($"{warning} Geometry stale, needs rebake!", new GUIStyle
@@ -230,7 +252,12 @@ public class MetaXRAcousticGeometryEditor : Editor
             }
 
             if (pathChanged || shouldWriteMesh)
-                geo.WriteFile();
+            {
+                if (geo.WriteFile())
+                {
+                    needsRebake = false;
+                }
+            }
         }
 
         if (Application.isPlaying && GUILayout.Button("Upload Mesh"))

@@ -237,6 +237,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 #pragma warning disable 0169
     [SerializeField]
     private Color[] materialColors;
+    /// \brief A hash code of the game objects contributing to the current serialized acoustic geometry, for detecting changes.
+    [SerializeField]
+    private Hash128 HierarchyHash;
 #pragma warning restore 0169
 #if UNITY_EDITOR
     [NonSerialized]
@@ -981,6 +984,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 #if UNITY_EDITOR
             gizmoMaterialMapping = materials.ToArray();
             UpdateGizmoMesh(geometryHandle);
+            HierarchyHash = ComputeHash();
 #endif
 
             return true;
@@ -1261,67 +1265,160 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 
     class AgeChecker : ITransformVisitor
     {
-        internal AgeChecker(DateTime timeStamp) => this.timeStamp = timeStamp;
+        internal AgeChecker(DateTime timeStamp, bool useColliders)
+        {
+            this.timeStamp = timeStamp;
+            this.useColliders = useColliders;
+        }
+
         public System.Object visit(Transform transform, System.Object parentData)
         {
-            MeshFilter[] meshes = transform.GetComponents<MeshFilter>();
-            foreach (MeshFilter meshFilter in meshes)
+            var activeMaterials = transform.GetComponents<MetaXRAcousticMaterial>().Where(x => x.enabled);
+            IMaterialDataProvider[] materials = Array.ConvertAll(activeMaterials.ToArray(), x => x);
+
+            if ( useColliders )
             {
-                string meshPath = UnityEditor.AssetDatabase.GetAssetPath(meshFilter.sharedMesh);
+                MeshCollider[] meshColliders = transform.GetComponents<MeshCollider>();
+                BoxCollider[] boxColliders = transform.GetComponents<BoxCollider>();
+
+                foreach (MeshCollider mc in meshColliders)
+                {
+                    if( CheckMeshTime( mc.sharedMesh, transform.gameObject ) )
+                    {
+                        return null;
+                    }
+                }
+
+                // Include transform in hash if it has any relevant components.
+                if ( (meshColliders != null && meshColliders.Length > 0) || (boxColliders != null && boxColliders.Length > 0) ||
+                    (materials != null && materials.Length > 0) )
+                {
+                    AppendTransformHash( ref hash, transform );
+                }
+            }
+            else
+            {
+                MeshFilter[] meshes = transform.GetComponents<MeshFilter>();
+                Terrain[] terrains = transform.GetComponents<Terrain>();
+
+                foreach (MeshFilter meshFilter in meshes)
+                {
+                    if( CheckMeshTime( meshFilter.sharedMesh, transform.gameObject ) )
+                    {
+                        return null;
+                    }
+                }
+
+                // Include transform in hash if it has any relevant components.
+                if ( (meshes != null && meshes.Length > 0) || (terrains != null && terrains.Length > 0) ||
+                    (materials != null && materials.Length > 0) )
+                {
+                    AppendTransformHash( ref hash, transform );
+                }
+            }
+            return null;
+        }
+
+        private bool CheckMeshTime( Mesh mesh, GameObject obj )
+        {
+            if ( mesh != null )
+            {
+                string meshPath = UnityEditor.AssetDatabase.GetAssetPath(mesh);
                 DateTime lastModified = System.IO.File.Exists(meshPath) ? System.IO.File.GetLastWriteTime(meshPath) : DateTime.MinValue;
 #if META_XR_ACOUSTIC_INFO
                 Debug.Log($"modified {lastModified}, last build {timeStamp}");
 #endif
                 if (lastModified > timeStamp)
                 {
-                    Debug.LogWarning($"Newer mesh file {meshPath}", transform.gameObject);
+                    Debug.LogWarning($"Newer mesh file {meshPath}", obj);
                     isOlder = true; // mesh file changed
-                    return null;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        readonly DateTime timeStamp;
+        internal bool isOlder = false;
+        readonly bool useColliders;
+        internal Hash128 hash = new Hash128();
+    }
+
+    internal bool IsOlder(DateTime timeStamp)
+    {
+        AgeChecker ageChecker = new AgeChecker(timeStamp, useColliders);
+        traverseMeshHierarchy(gameObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, ageChecker);
+        return ageChecker.isOlder || ageChecker.hash != HierarchyHash;
+    }
+
+    private static void AppendTransformHash( ref Hash128 hash, Transform transform )
+    {
+        hash.Append(transform.position.x);
+        hash.Append(transform.position.y);
+        hash.Append(transform.position.z);
+        hash.Append(transform.rotation.w);
+        hash.Append(transform.rotation.x);
+        hash.Append(transform.rotation.y);
+        hash.Append(transform.rotation.z);
+        hash.Append(transform.localScale.x);
+        hash.Append(transform.localScale.y);
+        hash.Append(transform.localScale.z);
+    }
+
+    class HashAppender : ITransformVisitor
+    {
+        internal HashAppender(Hash128 hash, bool useColliders)
+        {
+            this._hash = hash;
+            this.useColliders = useColliders;
+        }
+
+        public System.Object visit(Transform transform, System.Object parentData)
+        {
+            var activeMaterials = transform.GetComponents<MetaXRAcousticMaterial>().Where(x => x.enabled);
+            IMaterialDataProvider[] materials = Array.ConvertAll(activeMaterials.ToArray(), x => x);
+            if ( useColliders )
+            {
+                MeshCollider[] meshColliders = transform.GetComponents<MeshCollider>();
+                BoxCollider[] boxColliders = transform.GetComponents<BoxCollider>();
+                // Include transform in hash if it has any relevant components.
+                if ( (meshColliders != null && meshColliders.Length > 0) || (boxColliders != null && boxColliders.Length > 0) ||
+                    (materials != null && materials.Length > 0) )
+                {
+                    AppendTransformHash( ref _hash, transform );
+                }
+            }
+            else
+            {
+                MeshFilter[] meshes = transform.GetComponents<MeshFilter>();
+                Terrain[] terrains = transform.GetComponents<Terrain>();
+                // Include transform in hash if it has any relevant components.
+                if ( (meshes != null && meshes.Length > 0) || (terrains != null && terrains.Length > 0) ||
+                    (materials != null && materials.Length > 0) )
+                {
+                    AppendTransformHash( ref _hash, transform );
                 }
             }
             return null;
         }
 
-        readonly DateTime timeStamp;
-        internal bool isOlder = false;
-    }
-
-    internal bool IsOlder(DateTime timeStamp)
-    {
-        AgeChecker ageChecker = new AgeChecker(timeStamp);
-        traverseMeshHierarchy(gameObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, ageChecker);
-        return ageChecker.isOlder;
-    }
-    class HashAppender : ITransformVisitor
-    {
-        internal HashAppender(Hash128 hash) => _hash = hash;
-
-        public System.Object visit(Transform transform, System.Object parentData)
-        {
-            _hash.Append(transform.position.x);
-            _hash.Append(transform.position.y);
-            _hash.Append(transform.position.z);
-            _hash.Append(transform.rotation.w);
-            _hash.Append(transform.rotation.x);
-            _hash.Append(transform.rotation.y);
-            _hash.Append(transform.rotation.z);
-            _hash.Append(transform.localScale.x);
-            _hash.Append(transform.localScale.y);
-            _hash.Append(transform.localScale.z);
-
-            return null;
-        }
-
         private Hash128 _hash;
-
         internal Hash128 Hash { get => _hash; }
+        readonly bool useColliders;
     }
 
     internal void AppendHash(ref Hash128 hash)
     {
-        HashAppender hashAppender = new HashAppender(hash);
+        HashAppender hashAppender = new HashAppender(hash,useColliders);
         traverseMeshHierarchy(gameObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, hashAppender);
         hash = hashAppender.Hash;
+    }
+
+    internal Hash128 ComputeHash()
+    {
+        Hash128 hash = new Hash128();
+        AppendHash( ref hash );
+        return hash;
     }
 
     private static string GenerateFileName(Transform current)
