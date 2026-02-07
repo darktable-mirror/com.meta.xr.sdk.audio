@@ -48,7 +48,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
     ///
     /// Note the interaural time delay (ITD) and interaural level differences (ILD) are the same for any setting of
     /// HRTF intensity.
-    public  float HrtfIntensity
+    public float HrtfIntensity
     {
         get
         {
@@ -67,7 +67,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
     ///
     /// This parameter simulates sound sources that are no just points, but whose radiator occupies a volume of space.
     /// Note, if increased too large, users may end up inside the radius if the sound source is too close.
-    public  float VolumetricRadius
+    public float VolumetricRadius
     {
         get
         {
@@ -183,7 +183,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
     ///
     /// \see DirectivityPatternType for the available directivity patterns.
     /// \see DirectivityPattern for controlling which pattern is applied to this audio source.
-    public  DirectivityPatternType DirectivityPattern
+    public DirectivityPatternType DirectivityPattern
     {
         get
         {

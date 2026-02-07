@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.17904963, g: 0.22419551, b: 0.30600053, a: 1}
+  m_IndirectSpecularColor: {r: 0.44494238, g: 0.4945175, b: 0.5736587, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &4
 LightmapSettings:
@@ -155,13 +155,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 796f04c5a94947649c2235acef0008ab, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   hrtfIntensity: 1
   volumetricRadius: 0
   earlyReflectionsSendDb: 0
+  reverbReach: 0.5
+  occlusionIntensity: 1
   directivityIntensity: 1
   directivityPattern: 1
+  directSoundEnabled: 1
 --- !u!114 &30258541
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -172,11 +175,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a07f270ac36c49789466c75ceb88424c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   enableSpatialization: 1
   gainBoostDb: 10
-  enableAcoustics: 1
+  enableAcoustics: 0
   reverbSendDb: 0
 --- !u!64 &30258543
 MeshCollider:
@@ -397,7 +400,7 @@ Transform:
   m_Children:
   - {fileID: 1634861212}
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 253.048, z: 0}
 --- !u!1 &190859588
 GameObject:
@@ -673,7 +676,7 @@ Transform:
   m_Children:
   - {fileID: 190859589}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &537433171
 MeshRenderer:
@@ -735,13 +738,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 796f04c5a94947649c2235acef0008ab, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   hrtfIntensity: 1
   volumetricRadius: 0
   earlyReflectionsSendDb: 0
+  reverbReach: 0.5
+  occlusionIntensity: 1
   directivityIntensity: 1
   directivityPattern: 1
+  directSoundEnabled: 1
 --- !u!64 &537433174
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -766,11 +772,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a07f270ac36c49789466c75ceb88424c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   enableSpatialization: 1
   gainBoostDb: 10
-  enableAcoustics: 1
+  enableAcoustics: 0
   reverbSendDb: 0
 --- !u!1 &566793306
 GameObject:
@@ -801,8 +807,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f02983bbd55fead44922c6843753f164, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   movementSpeed: 5
   mouseSensitivity: 5
   headHeight: 1.5
@@ -1067,61 +1073,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &945182344
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 945182346}
-  - component: {fileID: 945182345}
-  m_Layer: 0
-  m_Name: RoomAcoustics
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &945182345
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 945182344}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc3115f71c5841078600752259d33fd1, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  lockPositionToListener: 0
-  width: 4
-  height: 2.5
-  depth: 7
-  leftMaterial: 18
-  rightMaterial: 18
-  ceilingMaterial: 0
-  floorMaterial: 5
-  frontMaterial: 18
-  backMaterial: 18
-  clutterFactor: 0.4
---- !u!4 &945182346
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 945182344}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.93, y: 1.25, z: 0.06}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1149557338
 GameObject:
   m_ObjectHideFlags: 0
@@ -1345,13 +1296,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 796f04c5a94947649c2235acef0008ab, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   hrtfIntensity: 1
   volumetricRadius: 0
   earlyReflectionsSendDb: 0
+  reverbReach: 0.5
+  occlusionIntensity: 1
   directivityIntensity: 1
   directivityPattern: 1
+  directSoundEnabled: 1
 --- !u!114 &1980762037
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1362,11 +1316,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a07f270ac36c49789466c75ceb88424c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   enableSpatialization: 1
   gainBoostDb: 10
-  enableAcoustics: 1
+  enableAcoustics: 0
   reverbSendDb: 0
 --- !u!64 &1980762039
 MeshCollider:
@@ -1587,5 +1541,5 @@ Transform:
   m_Children:
   - {fileID: 865352933}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 147.382, z: 0}

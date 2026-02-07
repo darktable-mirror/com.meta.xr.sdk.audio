@@ -57,7 +57,8 @@ public sealed class MetaXRAcousticMaterial : MonoBehaviour, Meta.XR.Acoustics.IM
     internal Color Color => Data != null ? Data.color : Color.magenta;
     internal void CopyPresetToCustomData(MetaXRAcousticMaterialProperties.BuiltinPreset preset)
     {
-        if (!hasCustomData) {
+        if (!hasCustomData)
+        {
             Debug.LogError("Material doesn't have custom data", gameObject);
             return;
         }

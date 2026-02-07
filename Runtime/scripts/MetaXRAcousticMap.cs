@@ -478,11 +478,11 @@ internal class MetaXRAcousticMap : MonoBehaviour
     }
 #endif
 
-                //***********************************************************************
-                // Start / Destroy
+    //***********************************************************************
+    // Start / Destroy
 
-                /// Initialize the audio Acoustic Map. This is called after Awake() and before the first Update().
-                void Start()
+    /// Initialize the audio Acoustic Map. This is called after Awake() and before the first Update().
+    void Start()
     {
         StartInternal();
     }
@@ -586,7 +586,14 @@ internal class MetaXRAcousticMap : MonoBehaviour
             unsafe
             {
                 IntPtr ptr = (IntPtr)Unity.Collections.LowLevel.Unsafe.NativeArrayUnsafeUtility.GetUnsafeReadOnlyPtr(data);
-                result = Native.Interface.AudioSceneIRReadMemory(mapHandle, ptr, (UInt64)data.Length);
+                lock (this)
+                {
+                    if (mapHandle != IntPtr.Zero)
+                    {
+                        result = Native.Interface.AudioSceneIRReadMemory(mapHandle, ptr, (UInt64)data.Length);
+                        GC.KeepAlive(data);
+                    }
+                }
             }
         });
 
@@ -597,7 +604,8 @@ internal class MetaXRAcousticMap : MonoBehaviour
 
             // Delay enabling map until any geometry is loaded
             Action delayedEnable = null;
-            delayedEnable = () => {
+            delayedEnable = () =>
+            {
                 MetaXRAcousticGeometry.OnAnyGeometryEnabled -= delayedEnable;
                 Debug.Log("Delayed enable");
                 Native.Interface.AudioSceneIRSetEnabled(mapHandle, isActiveAndEnabled);
@@ -634,14 +642,18 @@ internal class MetaXRAcousticMap : MonoBehaviour
         }
 #endif
 
-        if (mapHandle != IntPtr.Zero)
+        lock (this)
         {
-            // Destroy the Acoustic Map.
-            if (Native.Interface.DestroyAudioSceneIR(mapHandle) != Success)
+            if (mapHandle != IntPtr.Zero)
             {
-                Debug.LogError("Unable to destroy Acoustic Map", gameObject);
+                // Destroy the Acoustic Map.
+                if (Native.Interface.DestroyAudioSceneIR(mapHandle) != Success)
+                {
+                    Debug.LogError("Unable to destroy Acoustic Map", gameObject);
+                }
+                mapHandle = IntPtr.Zero;
+
             }
-            mapHandle = IntPtr.Zero;
         }
     }
 

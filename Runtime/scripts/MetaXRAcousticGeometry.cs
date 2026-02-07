@@ -415,15 +415,18 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 
     private bool DestroyPropagationGeometry()
     {
-        if (geometryHandle != IntPtr.Zero && Native.Interface.DestroyAudioGeometry(geometryHandle) != Success)
+        lock (this)
         {
-            Debug.LogError("Unable to destroy geometry", gameObject);
-            return false;
+            if (geometryHandle != IntPtr.Zero && Native.Interface.DestroyAudioGeometry(geometryHandle) != Success)
+            {
+                Debug.LogError("Unable to destroy geometry", gameObject);
+                return false;
+            }
+
+            geometryHandle = IntPtr.Zero;
+
+            return true;
         }
-
-        geometryHandle = IntPtr.Zero;
-
-        return true;
     }
 
     //
@@ -694,7 +697,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
                 else
                     Debug.Log($"Skipping child: {child.name}, it has it's own {nameof(MetaXRAcousticGeometry)} component");
 #endif
-        }
+            }
         }
     }
 
@@ -1520,7 +1523,14 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
             unsafe
             {
                 IntPtr ptr = (IntPtr)Unity.Collections.LowLevel.Unsafe.NativeArrayUnsafeUtility.GetUnsafeReadOnlyPtr(data);
-                result = Native.Interface.AudioGeometryReadMeshMemory(geometryHandle, ptr, (UInt64)data.Length);
+                lock (this)
+                {
+                    if (geometryHandle != IntPtr.Zero)
+                    {
+                        result = Native.Interface.AudioGeometryReadMeshMemory(geometryHandle, ptr, (UInt64)data.Length);
+                        GC.KeepAlive(data);
+                    }
+                }
             }
         });
 
@@ -1528,24 +1538,26 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         {
             float loadDuration = Time.realtimeSinceStartup - startTime;
             Debug.Log($"Sucessfully loaded Geometry {name}, load time = {loadDuration}", gameObject);
+
+            Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.ENABLED, isActiveAndEnabled);
+            ApplyTransform();
+            Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.STATIC, gameObject.isStatic);
+
+#if UNITY_EDITOR
+            UpdateGizmoMesh();
+#endif
+
+            isLoaded = true;
+
+            if (isActiveAndEnabled)
+            {
+                IncrementEnabledGeometryCount();
+            }
         }
         else
         {
             Debug.Log($"Unable to read the geometry {name}", gameObject);
         }
-
-        Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.ENABLED, isActiveAndEnabled);
-        ApplyTransform();
-        Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.STATIC, gameObject.isStatic);
-
-#if UNITY_EDITOR
-        UpdateGizmoMesh();
-#endif
-
-        isLoaded = true;
-
-        if (isActiveAndEnabled)
-            IncrementEnabledGeometryCount();
     }
 
 #if UNITY_EDITOR

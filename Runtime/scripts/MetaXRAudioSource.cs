@@ -57,7 +57,7 @@ public class MetaXRAudioSource : MonoBehaviour
     /// If false, audio will not be spatialized (i.e. it won't pass through HRTF convolution or be sent
     /// to the reverb bus or have early reflections). This effectively is an override for the "Spatialize" parameter of
     /// Unity's built-in AudioSource component.
-    public  bool EnableSpatialization
+    public bool EnableSpatialization
     {
         get
         {
@@ -79,7 +79,7 @@ public class MetaXRAudioSource : MonoBehaviour
     ///
     /// \see ReverbSendDb to control only the late reverberation send amount.
     /// \see MetaXRAudioSourceExperimentalFeatures#EarlyReflectionsSendDb to control the early reflections send amount.
-    public  float GainBoostDb
+    public float GainBoostDb
     {
         get
         {
@@ -99,7 +99,7 @@ public class MetaXRAudioSource : MonoBehaviour
     /// If enabled, this audio source will have room acoustics simulated for it, including early reflections
     /// and reverberation in addition to rendering it's direct sound. If disabled, only the direct sound will be
     /// rendered.
-    public  bool EnableAcoustics
+    public bool EnableAcoustics
     {
         get
         {

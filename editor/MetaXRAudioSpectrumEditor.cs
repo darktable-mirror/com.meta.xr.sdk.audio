@@ -31,7 +31,7 @@ internal sealed class MetaXRAudioSpectrumEditor
 {
     internal enum AxisScale
     {
-        Linear, Log, Square, Cube
+        Linear, Log, Square, Cube, SquareCentered
     }
 
     private static readonly Texture2D texture = EditorGUIUtility.whiteTexture;
@@ -537,6 +537,11 @@ internal sealed class MetaXRAudioSpectrumEditor
         data = v.y < r.yMin ? rangeMax : v.y > r.yMax ? rangeMin : MapData(1 - (v.y - r.y) / r.height, false)
     };
 
+    private float Square(float f)
+    {
+        return f * f;
+    }
+
     private float MapData(float f, bool forward = true)
     {
         float rangeSize = rangeMax - rangeMin;
@@ -551,6 +556,21 @@ internal sealed class MetaXRAudioSpectrumEditor
 
             case AxisScale.Square:
                 f = forward ? Mathf.Sqrt(f) : f * f;
+                break;
+
+            case AxisScale.SquareCentered:
+                if (forward)
+                {
+                    f = f > 0.5f ?
+                        0.5f + 0.5f * Mathf.Sqrt((f - 0.5f) * 2.0f) :
+                        0.5f - 0.5f * Mathf.Sqrt((0.5f - f) * 2.0f);
+                }
+                else
+                {
+                    f = f > 0.5f ?
+                        0.5f + 0.5f * Square((f - 0.5f) * 2.0f) :
+                        0.5f - 0.5f * Square((0.5f - f) * 2.0f);
+                }
                 break;
 
             case AxisScale.Cube:

@@ -165,11 +165,11 @@ class MetaXRAudioPluginUpdater
         if (!pluginNames.Contains(PluginName))
         {
             string pluginsPath = GetSpatializerPluginsRootPath();
-            #if UNITY_EDITOR_64
+#if UNITY_EDITOR_64
             string pluginPath = Path.GetFullPath(Path.Combine(pluginsPath, "x86_64/" + binaryName));
-            #else
+#else
             string pluginPath = Path.GetFullPath(Path.Combine(pluginsPath, "x86/" + binaryName));
-            #endif
+#endif
             if (File.Exists(pluginPath))
             {
                 Debug.LogError($"Meta XR Audio plugin not available at path: {pluginPath}");
@@ -179,7 +179,7 @@ class MetaXRAudioPluginUpdater
         const string AudioManagerAssetPath = "ProjectSettings/AudioManager.asset";
         SerializedObject audioManager = new SerializedObject(UnityEditor.AssetDatabase.LoadAllAssetsAtPath(AudioManagerAssetPath)[0]);
 
-        SerializedProperty spatializerPluginProperty = audioManager.FindProperty ("m_SpatializerPlugin");
+        SerializedProperty spatializerPluginProperty = audioManager.FindProperty("m_SpatializerPlugin");
         if (spatializerPluginProperty.stringValue != PluginName)
         {
             if (spatializerPluginProperty.stringValue == "")

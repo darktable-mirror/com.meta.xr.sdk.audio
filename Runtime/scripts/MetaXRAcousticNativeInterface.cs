@@ -206,7 +206,7 @@ public class MetaXRAcousticNativeInterface
     /// \see UnityNativeInterface
     /// \see WwisePluginInterface
     /// \see FMODPluginInterface
-    internal static INativeInterface Interface { get { if (CachedInterface == null) CachedInterface = FindInterface(); return CachedInterface; } }
+    public static INativeInterface Interface { get { if (CachedInterface == null) CachedInterface = FindInterface(); return CachedInterface; } }
 
     static INativeInterface FindInterface()
     {
@@ -297,6 +297,15 @@ public class MetaXRAcousticNativeInterface
         ///
         /// \see AcousticModel
         int SetAcousticModel(AcousticModel model);
+
+        /// \brief Reset the reverb and cut off reverb tails. It might be useful to call this
+        /// function while changing scenes in a game, to prevent reverb from the previous scene
+        /// from becoming audible when entering the new scene.
+        ///
+        /// \param feature specific property to query
+        /// \param enabled bool specifying if the feature should be enabled
+        /// \return Returns an ovrResult indicating success or failure
+        int ResetReverb();
 
         /// \brief Turn on and off specific features of the library
         ///
@@ -708,6 +717,13 @@ public class MetaXRAcousticNativeInterface
         public int SetAcousticModel(AcousticModel model)
         {
             return ovrAudio_SetAcousticModel(context, model);
+        }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_ResetSharedReverb(IntPtr context);
+        public int ResetReverb()
+        {
+            return ovrAudio_ResetSharedReverb(context);
         }
         [DllImport(binaryName)]
         private static extern int ovrAudio_Enable(IntPtr context, int what, int enable);
@@ -1311,6 +1327,13 @@ public class MetaXRAcousticNativeInterface
         {
             return ovrAudio_SetAcousticModel(context, model);
         }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_ResetSharedReverb(IntPtr context);
+        public int ResetReverb()
+        {
+            return ovrAudio_ResetSharedReverb(context);
+        }
         [DllImport(binaryName)]
         private static extern int ovrAudio_Enable(IntPtr context, int what, int enable);
         public int SetEnabled(int feature, bool enabled)
@@ -1911,6 +1934,13 @@ public class MetaXRAcousticNativeInterface
         {
             return ovrAudio_SetAcousticModel(context, model);
         }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_ResetSharedReverb(IntPtr context);
+        public int ResetReverb()
+        {
+            return ovrAudio_ResetSharedReverb(context);
+        }
         [DllImport(binaryName)]
         private static extern int ovrAudio_Enable(IntPtr context, int what, int enable);
         public int SetEnabled(int feature, bool enabled)
@@ -2468,6 +2498,7 @@ public class MetaXRAcousticNativeInterface
         /***********************************************************************************/
         // Settings API
         public int SetAcousticModel(AcousticModel model) => -1;
+        public int ResetReverb() => -1;
         public int SetEnabled(int feature, bool enabled) => -1;
         public int SetEnabled(EnableFlagInternal feature, bool enabled) => -1;
 

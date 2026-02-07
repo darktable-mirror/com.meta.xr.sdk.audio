@@ -77,7 +77,7 @@ public class MetaXRAudioNativeInterface
             Debug.Log("Meta XR Audio Native Interface initialized with Wwise plugin");
             return new WwisePluginInterface();
         }
-        catch(System.DllNotFoundException)
+        catch (System.DllNotFoundException)
         {
             // this is fine
         }

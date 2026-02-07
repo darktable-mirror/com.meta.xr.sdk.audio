@@ -83,56 +83,56 @@ public class MetaXRAcousticGeometryEditor : Editor
 
             using (new EditorGUI.DisabledGroupScope(Application.isPlaying))
             {
-                    bool showFilePicker = false;
-                    using (new EditorGUILayout.HorizontalScope())
+                bool showFilePicker = false;
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.PrefixLabel(new GUIContent("File Path:", "The path to the serialized mesh file, relative to the StreamingAssets directory"));
+
+                    int indentLevelPrev = EditorGUI.indentLevel;
+                    EditorGUI.indentLevel = 0;
+                    EditorGUILayout.LabelField(geo.RelativeFilePath, EditorStyles.wordWrappedLabel);
+
+                    if (GUILayout.Button("...", GUILayout.ExpandWidth(false)))
                     {
-                        EditorGUILayout.PrefixLabel(new GUIContent("File Path:", "The path to the serialized mesh file, relative to the StreamingAssets directory"));
-
-                        int indentLevelPrev = EditorGUI.indentLevel;
-                        EditorGUI.indentLevel = 0;
-                        EditorGUILayout.LabelField(geo.RelativeFilePath, EditorStyles.wordWrappedLabel);
-
-                        if (GUILayout.Button("...", GUILayout.ExpandWidth(false)))
-                        {
-                            // defer displaying dialog to avoid layout error
-                            showFilePicker = true;
-                        }
-
-                        EditorGUI.indentLevel = indentLevelPrev;
+                        // defer displaying dialog to avoid layout error
+                        showFilePicker = true;
                     }
 
-                    if (showFilePicker)
+                    EditorGUI.indentLevel = indentLevelPrev;
+                }
+
+                if (showFilePicker)
+                {
+                    if (!System.IO.Directory.Exists(Application.streamingAssetsPath))
                     {
-                        if (!System.IO.Directory.Exists(Application.streamingAssetsPath))
-                        {
-                            System.IO.Directory.CreateDirectory(Application.streamingAssetsPath);
-                        }
-
-                        string directory = Application.streamingAssetsPath;
-                        string fileName = geo.gameObject.name + "." + MetaXRAcousticGeometry.FILE_EXTENSION;
-
-                        if (newFilePath != "")
-                        {
-                            string suggestedDirectory = System.IO.Path.GetDirectoryName(newFilePath);
-                            while (!System.IO.Directory.Exists(suggestedDirectory))
-                            {
-                                suggestedDirectory = System.IO.Path.GetFullPath(suggestedDirectory + "/..");
-                                Debug.Log($"suggest: {suggestedDirectory}");
-                            }
-                            directory = suggestedDirectory;
-                            fileName = System.IO.Path.GetFileName(newFilePath);
-                        }
-
-                        newFilePath = EditorUtility.SaveFilePanel(
-                            "Save baked mesh to file", directory, fileName,
-                            MetaXRAcousticGeometry.FILE_EXTENSION);
-
-                        // If the user canceled, use the old path.
-                        if (string.IsNullOrEmpty(newFilePath))
-                            newFilePath = geo.AbsoluteFilePath;
-                        else
-                            pathChanged = true;
+                        System.IO.Directory.CreateDirectory(Application.streamingAssetsPath);
                     }
+
+                    string directory = Application.streamingAssetsPath;
+                    string fileName = geo.gameObject.name + "." + MetaXRAcousticGeometry.FILE_EXTENSION;
+
+                    if (newFilePath != "")
+                    {
+                        string suggestedDirectory = System.IO.Path.GetDirectoryName(newFilePath);
+                        while (!System.IO.Directory.Exists(suggestedDirectory))
+                        {
+                            suggestedDirectory = System.IO.Path.GetFullPath(suggestedDirectory + "/..");
+                            Debug.Log($"suggest: {suggestedDirectory}");
+                        }
+                        directory = suggestedDirectory;
+                        fileName = System.IO.Path.GetFileName(newFilePath);
+                    }
+
+                    newFilePath = EditorUtility.SaveFilePanel(
+                        "Save baked mesh to file", directory, fileName,
+                        MetaXRAcousticGeometry.FILE_EXTENSION);
+
+                    // If the user canceled, use the old path.
+                    if (string.IsNullOrEmpty(newFilePath))
+                        newFilePath = geo.AbsoluteFilePath;
+                    else
+                        pathChanged = true;
+                }
 
 #if ENABLE_DEBUG_EXPORT_OBJ
                 // this allows you to export the geometry to a .obj for viewing

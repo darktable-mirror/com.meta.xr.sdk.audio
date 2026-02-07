@@ -116,13 +116,13 @@ internal sealed class MetaXRAcousticControlZoneEditor : Editor
 
         if (rt60 == null)
         {
-            rt60 = new MetaXRAudioSpectrumEditor("RT60 Adjustment", "Adjusts the reverb decay time of points inside the zone", MetaXRAudioSpectrumEditor.AxisScale.Linear, kRt60SpectrumColor, -2.0f, 2.0f);
+            rt60 = new MetaXRAudioSpectrumEditor("RT60 Adjustment", "Adjusts the reverb decay time inside the zone", MetaXRAudioSpectrumEditor.AxisScale.SquareCentered, kRt60SpectrumColor, -5.0f, 5.0f);
             rt60.dataUnits = " s";
         }
 
         if (reverbLevel == null)
         {
-            reverbLevel = new MetaXRAudioSpectrumEditor("Reverb Level Adjustment", "Adjusts the reverb level of points inside the zone", MetaXRAudioSpectrumEditor.AxisScale.Linear, kReverbLevelSpectrumColor, -12.0f, 12.0f);
+            reverbLevel = new MetaXRAudioSpectrumEditor("Reverb Level Adjustment", "Adjusts the reverb level inside the zone", MetaXRAudioSpectrumEditor.AxisScale.SquareCentered, kReverbLevelSpectrumColor, -24.0f, 24.0f);
             reverbLevel.dataUnits = " dB";
         }
 

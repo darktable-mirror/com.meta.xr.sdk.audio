@@ -65,7 +65,7 @@ public class RepeatSound : MonoBehaviour
 
             clipIndexPrev = clipIndex;
             source.clip = clips[clipIndex];
-            float pitchSemitones = Random.Range(-pitchRandomizationSemitones/2, pitchRandomizationSemitones/2);
+            float pitchSemitones = Random.Range(-pitchRandomizationSemitones / 2, pitchRandomizationSemitones / 2);
             source.pitch = Mathf.Pow(2, pitchSemitones / 12);
             float volumeDb = Random.Range(-volumeRandomizationDb, 0.0f);
             source.volume = Mathf.Pow(10.0f, volumeDb / 20.0f);
