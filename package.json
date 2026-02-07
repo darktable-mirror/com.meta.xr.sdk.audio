@@ -1,7 +1,7 @@
 {
   "name": "com.meta.xr.sdk.audio",
   "displayName": "Meta XR Audio SDK",
-  "version": "67.0.0",
+  "version": "68.0.0",
   "description": "Comprehensive spatial audio features for immersive applications, including a spatial audio renderer with HRTF, ambisonic audio playback, and room acoustics for creating immersive environments.",
   "samples": [
     {
@@ -16,16 +16,16 @@
     "name": "Meta Platforms, Inc.",
     "url": "https://developer.oculus.com/"
   },
-  "documentationUrl": "https://developer.oculus.com/documentation/unity/",
-  "changelogUrl": "https://developer.oculus.com/downloads/package/unity-integration/",
   "licensesUrl": "https://developer.oculus.com/licenses/oculussdk",
   "licenseMessage": "By adding or using this package you agree to the terms and conditions of the Meta Platforms Technologies SDK License Agreement: https://developer.oculus.com/licenses/oculussdk",
   "keywords": [
-    "Quest",
     "SDK",
-    "Meta",
-    "XR",
     "Audio",
-    "Oculus"
-  ]
+    "Quest",
+    "XR",
+    "Oculus",
+    "Meta"
+  ],
+  "documentationUrl": "https://developer.oculus.com/documentation/unity/meta-xr-audio-sdk-unity/",
+  "changelogUrl": "https://developer.oculus.com/downloads/package/meta-xr-audio-sdk/"
 }

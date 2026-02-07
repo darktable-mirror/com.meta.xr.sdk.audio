@@ -28,6 +28,9 @@ namespace Meta.XR.Acoustics
     /***********************************************************************************/
     // ENUMS and STRUCTS
     /***********************************************************************************/
+    /// \brief Enumeration of features that can be enabled/disabled.
+    ///
+    /// \see MetaXRAcousticNativeInterface#INativeInterface#SetAcousticModel
     public enum AcousticModel : int
     {
         Automatic = -1, ///< Automatically select highest quality (if geometry is set the propagation system will be active, otherwise if the callback is set dynamic room modeling is enabled, otherwise fallback to the static shoe box)
@@ -37,132 +40,172 @@ namespace Meta.XR.Acoustics
     }
 
     [Flags]
+    /// \brief Enumeration of features that can be enabled/disabled.
+    ///
+    /// \see MetaXRAudioNativeInterface#NativeInterface#SetEnabled
     public enum EnableFlagInternal : uint
     {
-        NONE = 0,
-        SIMPLE_ROOM_MODELING = 2,
-        LATE_REVERBERATION = 3,
-        RANDOMIZE_REVERB = 4,
-        PERFORMANCE_COUNTERS = 5,
-        DIFFRACTION = 6,
+        NONE = 0, ///< Disable all features
+        SIMPLE_ROOM_MODELING = 2, ///< Enable/disable simple room modeling globally. Default: disabled
+        LATE_REVERBERATION = 3, ///< Late reverbervation, requires simple room modeling enabled. Default: disabled
+        RANDOMIZE_REVERB = 4, ///< Randomize reverbs to diminish artifacts. Default: enabled
+        PERFORMANCE_COUNTERS = 5, ///< Enable profiling. Default: disabled
+        DIFFRACTION = 6, ///< Enable Diffraction. Default: disabled
     }
 
+    /// \brief The type of mesh face that is used to define geometry.
+    ///
+    /// For all face types, the vertices should be provided such that they are in counter-clockwise
+    /// order when the face is viewed from the front. The vertex order is used to determine the
+    /// surface normal orientation.
     public enum FaceType : uint
     {
-        TRIANGLES = 0,
-        QUADS
+        TRIANGLES = 0, ///< The mesh faces are defined by Triangles
+        QUADS ///< The mesh faces are defined by Quads
     }
 
+    /// \brief The properties for audio materials. All properties are frequency dependent.
     public enum MaterialProperty : uint
     {
-        ABSORPTION = 0,
-        TRANSMISSION,
-        SCATTERING
+        ABSORPTION = 0, ///< The fraction of sound arriving at a surface that is absorbed by the material. This value is in the range 0 to 1, where 0 indicates a perfectly reflective material, and 1 indicates a perfectly absorptive material. Absorption is inversely related to the reverberation time, and has the strongest impact on the acoustics of an environment. The default absorption is 0.1.
+        TRANSMISSION, ///< The fraction of sound arriving at a surface that is transmitted through the material. This value is in the range 0 to 1, where 0 indicates a material that is acoustically opaque, and 1 indicates a material that is acoustically transparent. To preserve energy in the simulation, the following condition must hold: (1 - absorption + transmission) <= 1 If this condition is not met, the transmission and absorption coefficients will be modified to enforce energy conservation. The default transmission is 0.
+        SCATTERING ///< The fraction of sound arriving at a surface that is scattered. This property in the range 0 to 1 controls how diffuse the reflections are from a surface, where 0 indicates a perfectly specular reflection and 1 indicates a perfectly diffuse reflection. The default scattering is 0.5.
     }
 
-    // Matches internal mesh layout
+    /// \brief A struct that defines a grouping of mesh faces and the material that should be applied to the faces.
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct MeshGroup
     {
-        public UIntPtr indexOffset;
-        public UIntPtr faceCount;
+        public UIntPtr indexOffset; ///< The offset in the index buffer of the first index in the group.
+        public UIntPtr faceCount; ///< The number of faces that this group uses from the index buffer. The number of bytes read from the index buffer for the group is determined by the formula: (faceCount)*(verticesPerFace)*(bytesPerIndex)
         [MarshalAs(UnmanagedType.U4)]
-        public FaceType faceType;
-        public IntPtr material;
+        public FaceType faceType; ///< The type of face that the group uses. This determines how many indices are needed to define a face.
+        public IntPtr material; ///< A handle to the material that should be assigned to the group. If equal to 0/NULL/nullptr, a default material is used instead.
     }
 
     [Flags]
+    /// \brief Flags describing the status an Acoustic Map.
     public enum AcousticMapStatus : uint
     {
-        EMPTY = 0,
-        MAPPED = (1 << 0),
-        READY = (1 << 1) | MAPPED
+        EMPTY = 0, ///< A status flag indicating the Map has no data (i.e. was just created).
+        MAPPED = (1 << 0), ///< A status flag indicating the Map has been spatially mapped (but Map not necessarily computed).
+        READY = (1 << 1) | MAPPED ///< A status flag indicating the Map is ready for use in a runtime simulation (i.e. has been mapped and computed).
     }
 
     [Flags]
+    /// \brief The boolean flags for an Acoustic Map.
     public enum AcousticMapFlags : uint
     {
-        NONE = 0,
-        STATIC_ONLY = (1 << 0),
-        NO_FLOATING = (1 << 1),
-        MAP_ONLY = (1 << 2),
-        DIFFRACTION = (1 << 3)
+        NONE = 0, ///< The flag value when no flags are set.
+        STATIC_ONLY = (1 << 0), ///< If set, only objects that have this flag set will be considered for the computation.
+        NO_FLOATING = (1 << 1), ///< If set, the Map will not create points that are floating far above the floor (as determined by gravity vector).
+        MAP_ONLY = (1 << 2), ///< If set, no data will be calculated. The scene will be mapped but not simulated.
+        DIFFRACTION = (1 << 3) ///< If set, the Map will be preprocessed to support runtime diffraction.
     }
 
     [Flags]
+    /// \brief The boolean flags for an audio object.
     public enum ObjectFlags : uint
     {
-        EMPTY = 0,
-        ENABLED = (1 << 0),
-        STATIC = (1 << 1)
+        EMPTY = 0, ///< If set, the object is not used within the simulation and will be ignored.
+        ENABLED = (1 << 0), ///< If set, the object is used within the simulation and impacts the computed acoustics.
+        STATIC = (1 << 1) ///< If set, the object is assumed to never move or change geometry. The context may use this flag as a hint to optimize the simulation.
     }
 
     [Flags]
+    /// \brief Flags to describe how to render a mesh
     public enum MeshFlags : uint
     {
-        NONE = 0,
-        ENABLE_SIMPLIFICATION = (1 << 0),
-        ENABLE_DIFFRACTION = (1 << 1),
+        NONE = 0, ///< This flag indicates none of the other mesh flags are enabled
+        ENABLE_SIMPLIFICATION = (1 << 0), ///< Turning on Mesh Simplification will reduce the resource usage of geometry propagation at the cost of audio quality.
+        ENABLE_DIFFRACTION = (1 << 1), ///< If diffraction is enabled, the geometry will support real-time diffraction. Note, if this is disabled and you try to turn on real time diffraction, you won't hear a difference as the geometry did not render to support geometry.
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    /// \brief A struct that describes how a mesh should be simplified.
     public struct MeshSimplification
     {
-        public UIntPtr thisSize;
+        public UIntPtr thisSize; /// The size of this structure. You must set this equal to sizeof(ovrAudioMeshSimplification) This will ensure version compatibility
         [MarshalAs(UnmanagedType.U4)]
-        public MeshFlags flags;
-        public float unitScale;
-        public float maxError;
-        public float minDiffractionEdgeAngle;
-        public float minDiffractionEdgeLength;
-        public float flagLength;
-        public UIntPtr threadCount;
+        public MeshFlags flags; /// The mesh flags that describe how the mesh should be rendered
+        public float unitScale; /// The local unit scale factor for the mesh (the factor that converts from mesh-local coordinates to coordinates in meters). The other length quantities in this struct are converted to mesh-local coordinates using this value.
+        public float maxError; /// The maximum allowed error due to simplification, expressed as a distance in meters.
+        public float minDiffractionEdgeAngle; /// The minimum angle (degrees) that there must be between two adjacent face normals for their edge to be marked as diffracting.
+        public float minDiffractionEdgeLength; /// The minimum length in meters that an edge should have for it to be marked as diffracting.
+        public float flagLength; /// The maximum distance in meters that a diffraction flag extends out from the edge.
+        public UIntPtr threadCount; /// The number of threads that should be used for processing the mesh. A value of 0 means to use the same number of threads as CPUs. A value of 1 indicates that all work is done on the calling thread (no threads created). This number will be clamped to no more than the number of CPUs.
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+
+    /// \brief A function pointer that provides information about the current progress on a long-running operation.
+    ///
+    /// This function will be called periodically by long-running operations to report progress to the GUI.
+    /// \param[out] userData A pointer to any data the user would like to be accessible during the callback
+    /// \param[out] progress The progress value is in the range [0,1] and indicates the approximate fraction of the operation that has been performed so far, and could be used to display a progress bar.
+    /// \param[out] description The string is a NULL-terminated ASCII description of the current task.
+    /// \return indicates whether or not to continue processing (non-zero -> continue, zero -> cancel).
     public delegate bool ProgressCallback(IntPtr userData, string description, float progress);
 
     [StructLayout(LayoutKind.Sequential)]
+    /// \brief A struct containing callback functions used when computing an Acoustic Map.
     public struct SceneIRCallbacks
     {
-        public IntPtr userData;
+        public IntPtr userData; /// A pointer to arbitrary user data that is passed into the callback functions.
 
         [MarshalAs(UnmanagedType.FunctionPtr)]
-        public ProgressCallback progress;
+        public ProgressCallback progress; /// A pointer to function that reports the computation progress to a GUI.
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    /// \brief A struct that describes how an Acoustic Map is computed.
     public struct MapParameters
     {
-        public UIntPtr thisSize;
-        public SceneIRCallbacks callbacks;
-        public UIntPtr threadCount;
-        public UIntPtr reflectionCount;
+        public UIntPtr thisSize; /// A value that should be set to the size in bytes of the ovrAudioSceneIRParameters structure. This is used for backward/forward compatibility. = sizeof(ovrAudioSceneIRParameters)
+        public SceneIRCallbacks callbacks; /// A struct containing callback functions that receive notifications during computation.
+        public UIntPtr threadCount; /// The number of threads that should be used for doing the computation. A value of 0 means to use the same number of threads as CPUs. A value of 1 indicates that all work is done on the calling thread (no threads created). This number will be clamped to no more than the number of CPUs.
+        public UIntPtr reflectionCount; /// The number of early reflections that should be stored in the scene IR. Increasing this value increases the size of the IR data, as well as the quality.
 
         [MarshalAs(UnmanagedType.U4)]
-        public AcousticMapFlags flags;
+        public AcousticMapFlags flags; /// Flags that describe how an Acoustic Map should be computed.
 
-        public float minResolution;
-        public float maxResolution;
+        public float minResolution; /// The minimum point placement resolution, expressed in meters. This determines the smallest spacing of points in the scene, as well as the smallest space that will be considered as part of the precomputation. This should be a little bit smaller than the smallest possible space that the listener can traverse. Note that decreasing this value doesn't necessarily result in more densely-sampled points - the number of points is more clostly related to the number of distinct acoustic spaces in the scene.
+        public float maxResolution; /// The maximum point placement resolution, expressed in meters. This determines the largest spacing of points in the scene. Decreasing this value improves the quality for large open scenes, but also increases the precomputation time and storage required.
 
-        public float headHeight;
-        public float maxHeight;
+        public float headHeight; /// The typical height in meters of the listener's head above floor surfaces. This is used to determine where to vertically place probe points in the scene. The quality will be best for sources and listeners that are around this height.
+        public float maxHeight; /// The maximum height in meters of a probe point above floor surfaces. Increase this value to include more points floating in the air.
 
-        public float gravityVectorX;
-        public float gravityVectorY;
-        public float gravityVectorZ;
+        public float gravityVectorX; /// The X value in a 3D unit vector indicating the downward direction in the scene. This is used to cull probe points that are irrelevant because they are too high above the floor surface. In a Y-up world, this should be {0,-1,0}, while Z-up would be {0,0,-1}.
+        public float gravityVectorY; /// The Y value in a 3D unit vector indicating the downward direction in the scene. This is used to cull probe points that are irrelevant because they are too high above the floor surface. In a Y-up world, this should be {0,-1,0}, while Z-up would be {0,0,-1}.
+        public float gravityVectorZ; /// The Z value in a 3D unit vector indicating the downward direction in the scene. This is used to cull probe points that are irrelevant because they are too high above the floor surface. In a Y-up world, this should be {0,-1,0}, while Z-up would be {0,0,-1}.
     }
 
+    /// \brief The properties of an audio control Zone.
     public enum ControlZoneProperty : uint
     {
-        RT60 = 0,
-        REVERB_LEVEL
+        RT60 = 0, ///< A frequency-dependent property describing the reverberation time adjustment in the Zone. The value represents a signed additive adjustment to the simulated reverb time (units: seconds).
+        REVERB_LEVEL ///< A frequency-dependent property describing the reverberation level adjustment in the Zone. The value represents a signed additive adjustment to the simulated reverb level (units: decibels).
     }
 }
 
+/// \brief Parent class that functions as a scope for all the code that wraps binary interfaces for the Unity, Wwise and FMOD plug-ins.
 public class MetaXRAcousticNativeInterface
 {
     static INativeInterface CachedInterface;
+
+    /// \brief The current interface being used by the system.
+    ///
+    /// The first access of this field will trigger a scan for any Meta XR Audio plugin binaries, which are searched for in the following order (taking the first one found and halting any further search):
+    /// 1. Meta XR Audio Plugin for Wwise
+    /// 2. Meta XR Audio Plugin for FMOD
+    /// 3. Meta XR Audio Plugin for Unity
+    ///
+    /// If none are found, Unity is assumed, but attempting to call any of the functions of the returned `NativeInterface` class result in undefined behavior.
+    ///
+    /// \see NativeInterface
+    /// \see UnityNativeInterface
+    /// \see WwisePluginInterface
+    /// \see FMODPluginInterface
     internal static INativeInterface Interface { get { if (CachedInterface == null) CachedInterface = FindInterface(); return CachedInterface; } }
 
     static INativeInterface FindInterface()
@@ -224,91 +267,397 @@ public class MetaXRAcousticNativeInterface
         return new DummyInterface();
     }
 
+    /// \brief Enumeration of all the data types that could be used in the binary's interface.
     public enum ovrAudioScalarType : uint
     {
-        Int8,
-        UInt8,
-        Int16,
-        UInt16,
-        Int32,
-        UInt32,
-        Int64,
-        UInt64,
-        Float16,
-        Float32,
-        Float64
+        Int8, ///< 8-bit signed integer [-128, 127]
+        UInt8, ///< 8-bit unsigned integer [0, 255]
+        Int16, ///< 16-bit signed integer [-32768, 32767]
+        UInt16, ///< 16-bit unsigned integer [0, 65535]
+        Int32, ///< 32-bit signed integer [-2147483648, 21474836]
+        UInt32, ///< 32-bit unsigned integer [0, 4294967295]
+        Int64, ///< 64-bit signed integer [-9223372036854775808, 9223372036854775807]
+        UInt64, ///< 64-bit unsigned integer [0, 184467440737095516]
+        Float16, ///< 16-bit floating point number with 1 bit sign, 10 bits exponent, and 15 bits mantissa
+        Float32, ///< 32-bit floating point number with 1 bit sign, 23 bits exponent, and 23 bits mantissa
+        Float64 ///< 64-bit floating point number with 1 bit sign, 52 bits exponent, and 52 bits mantissa
     }
 
+    /// \brief Abstract parent class for all classes that wrap a binary's interface.
+    /// \see UnityNativeInterface
+    /// \see WwisePluginInterface
+    /// \see FMODPluginInterface
     public interface INativeInterface
     {
         /***********************************************************************************/
         // Settings API
+        /// \brief Explicitly set the reflection model
+        ///
+        /// \param Model[in] The reflection model to use (default is Automatic)
+        ///
+        /// \see AcousticModel
         int SetAcousticModel(AcousticModel model);
 
+        /// \brief Turn on and off specific features of the library
+        ///
+        /// \param feature specific property to query
+        /// \param enabled bool specifying if the feature should be enabled
+        /// \return Returns an ovrResult indicating success or failure
         int SetEnabled(int feature, bool enabled);
         int SetEnabled(EnableFlagInternal feature, bool enabled);
 
         /***********************************************************************************/
         // Geometry API
+        /// \brief Create a geometry object
+        ///
+        /// \param[out] geometry A pointer to the created geometry object
+        /// \return Returns an ovrResult indicating success or failure
         int CreateAudioGeometry(out IntPtr geometry);
+
+        /// \brief Destroy a geometry object
+        ///
+        /// \param[in] geometry A pointer to the geometry object that should be destroyed
+        /// \return Returns an ovrResult indicating success or failure
         int DestroyAudioGeometry(IntPtr geometry);
+
+        /// \brief Set the properties of a geometry object
+        ///
+        /// \param[in] geometry A pointer to the geometry object
+        /// \param[in] flag The property about the geometry to be set
+        /// \param[in] enabled bool specifying if the feature should be enabled
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometrySetObjectFlag(IntPtr geometry, ObjectFlags flag, bool enabled);
+
+        /// \brief Bake mesh data into a geometry object
+        ///
+        /// \param[in] geometry A pointer to the geometry object where the mesh data is baked
+        /// \param[in] vertices An array of vertices that describe the mesh
+        /// \param[in] vertexCount The number of vertices in the vertices array
+        /// \param[in] indices An array of integers that describe the mesh
+        /// \param[in] indexCount The number of integers in the indices array
+        /// \param[in] groups An array of mesh group data
+        /// \param[in] groupCount The number of mesh groups in the groups array
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryUploadMeshArrays(IntPtr geometry,
                                                         float[] vertices, int vertexCount,
                                                         int[] indices, int indexCount,
                                                         MeshGroup[] groups, int groupCount);
+
+        /// \brief Bake mesh data into a geometry object with simplification flags
+        ///
+        /// \param[in] geometry A pointer to the geometry object where the mesh data is baked
+        /// \param[in] vertices An array of vertices that describe the mesh
+        /// \param[in] vertexCount The number of vertices in the vertices array
+        /// \param[in] indices An array of integers that describe the mesh
+        /// \param[in] indexCount The number of integers in the indices array
+        /// \param[in] groups An array of mesh group data
+        /// \param[in] groupCount The number of mesh groups in the groups array
+        /// \param[in] simplification A struct containing flags for mesh simplification
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryUploadSimplifiedMeshArrays(IntPtr geometry,
                                                         float[] vertices, int vertexCount,
                                                         int[] indices, int indexCount,
                                                         MeshGroup[] groups, int groupCount,
                                                         ref MeshSimplification simplification);
+
+        /// \brief Set the transform of a geometry object
+        ///
+        /// \param[in] geometry A pointer to the geometry object
+        /// \param[in] matrix A 4x4 matrix that contains the transform to apply
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometrySetTransform(IntPtr geometry, in Matrix4x4 matrix);
+
+        /// \brief Get the transform of a geometry object
+        ///
+        /// \param[in] geometry A pointer to the geometry object
+        /// \param[out] matrix A 4x4 matrix that contains the transform currently applied to the geometry
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4);
+
+        /// \brief Write a geometry object into a .xrageo file
+        ///
+        /// \param[in] geometry A pointer to the geometry object to be written
+        /// \param[in] filePath A fully qualified path to which the output file should be written
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryWriteMeshFile(IntPtr geometry, string filePath);
+
+        /// \brief Read in baked geometry from a .xrageo file into a geometry object
+        ///
+        /// \param[in] geometry A pointer to the geometry object where the file data will be read
+        /// \param[in] filePath A fully qualified path to the .xrageo file that should be read
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryReadMeshFile(IntPtr geometry, string filePath);
+
+        /// \brief Read in geometry data as raw data input stored in an array. This allows alternate file reading methods
+        ///
+        /// \param[in] geometry A pointer to the geometry object where the file data will be read
+        /// \param[in] data A pointer to the raw data that should be read
+        /// \param[in] dataLength The number of bytes in the raw data
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength);
+
+        /// \brief Save the mesh data of a geometry object into an .obj file
+        ///
+        /// \param[in] geometry A pointer to the geometry object where the mesh data is baked
+        /// \param[in] filePath A fully qualified path to which the output file should be written
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath);
+
+        /// \brief Get the mesh information that is currently saved to a geometry object
+        ///
+        /// \param[in] geometry A pointer to the geometry object where the mesh data is baked
+        /// \param[in] vertices An array of vertices that describe the mesh
+        /// \param[in] indices An array of integers that describe the mesh
+        /// \param[in] materialIndices An array of integers that describe the materials
+        /// \return Returns an ovrResult indicating success or failure
         int AudioGeometryGetSimplifiedMesh(IntPtr geometry, out float[] vertices, out uint[] indices, out uint[] materialIndices);
 
         /***********************************************************************************/
         // Material API
+        /// \brief Get the value of a material property at the given frequency
+        ///
+        /// \param[in] material A pointer to the material object
+        /// \param[in] property The material property to get
+        /// \param[in] frequency The frequency to get the value at
+        /// \param[out] value The returned material property at the given frequency
+        /// \return Returns an ovrResult indicating success or failure
         int AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value);
+
+        /// \brief Create a new material object
+        ///
+        /// \param[out] material A pointer to the newly created material object
+        /// \return Returns an ovrResult indicating success or failure
         int CreateAudioMaterial(out IntPtr material);
+
+        /// \brief Destroy a material object
+        ///
+        /// \param[in] material A pointer to the material object to be destroyed
+        /// \return Returns an ovrResult indicating success or failure
         int DestroyAudioMaterial(IntPtr material);
+
+        /// \brief Set the value of a material property at the given frequency
+        ///
+        /// \param[in] material A pointer to the material object
+        /// \param[in] property The material property to set
+        /// \param[in] frequency The frequency to set the value at
+        /// \param[in] value The desired value of the material property at the given frequency
+        /// \return Returns an ovrResult indicating success or failure
         int AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value);
+
+        /// \brief Remove all the set values for a material property
+        ///
+        /// \param[in] material A pointer to the material object
+        /// \param[in] property The material property to get
+        /// \return Returns an ovrResult indicating success or failure
         int AudioMaterialReset(IntPtr material, MaterialProperty property);
         /***********************************************************************************/
         // Acoustic Map API
+        /// \brief Create a new Acoustic Map object
+        ///
+        /// \param[out] sceneIR A pointer to the newly created Acoustic Map object
+        /// \return Returns an ovrResult indicating success or failure
         int CreateAudioSceneIR(out IntPtr sceneIR);
+
+        /// \brief Destroy an Acoustic Map object
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object to be destroyed
+        /// \return Returns an ovrResult indicating success or failure
         int DestroyAudioSceneIR(IntPtr sceneIR);
+
+        /// \brief Set an Acoustic Map object to be enabled or disabled
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[in] enabled bool specifying if the Acoustic Map should be enabled or disabled
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRSetEnabled(IntPtr sceneIR, bool enabled);
+
+        /// \brief Get whether an Acoustic Map object is enabled or disabled
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[out] enabled bool specifying if the Acoustic Map is be enabled or disabled
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRGetEnabled(IntPtr sceneIR, out bool enabled);
+
+        /// \brief Get the current computation status of an Acoustic Map object
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[out] status The current computation status of the Acoustic Map object
+        /// \return Returns an ovrResult indicating success or failure
+        ///
+        /// \see AcousticMapStatus
         int AudioSceneIRGetStatus(IntPtr sceneIR, out AcousticMapStatus status);
+
+        /// \brief Generate the default values for the parameters of an Acoustic Map object
+        ///
+        /// \param[out] parameters The initialized parameters with default values
+        /// \return Returns an ovrResult indicating success or failure
+        ///
+        /// \see MapParameters
         int InitializeAudioSceneIRParameters(out MapParameters parameters);
+
+        /// \brief Bake an Acoustic Map given particular parameters. It will use automatically generated points
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[out] parameters The parameters to be used for the baking
+        /// \return Returns an ovrResult indicating success or failure
+        ///
+        /// \see MapParameters
         int AudioSceneIRCompute(IntPtr sceneIR, ref MapParameters parameters);
+
+        /// \brief Bake an Acoustic Map given particular parameters. It will use custom points
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[in] points An array of custom points to be used for the baking
+        /// \param[in] pointCount The number of points in the points array
+        /// \param[out] parameters The parameters to be used for the baking
+        /// \return Returns an ovrResult indicating success or failure
+        ///
+        /// \see MapParameters
         int AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
             float[] points, UIntPtr pointCount, ref MapParameters parameters);
+
+        /// \brief Get the number of points used in the Acoustic Map
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[out] pointCount The number of points in the Acoustic Map
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount);
+
+        /// \brief Get the exact points used in the Acoustic Map
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[out] points An array of the points used in the Acoustic Map
+        /// \param[in] maxPointCount The maximum number of points that can be stored in the points array
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount);
+
+        /// \brief Set the transform of an Acoustic Map object
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[in] matrix The transform to apply represented in a 4x4 matrix
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRSetTransform(IntPtr sceneIR, in Matrix4x4 matrix);
+
+        /// \brief Get the transform currently applied to an Acoustic Map object
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[out] matrix4x4 The transform currently applied to the Acoustic Map represented in a 4x4 matrix
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRGetTransform(IntPtr sceneIR, out float[] matrix4x4);
+
+        /// \brief Write an Acoustic Map into a .xramap file
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[in] filePath A fully qualified path to which the output file should be written
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRWriteFile(IntPtr sceneIR, string filePath);
+
+        /// \brief Read a .xramap file into an Acoustic Map object
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[in] filePath A fully qualified path which the .xramap file that should be read from
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRReadFile(IntPtr sceneIR, string filePath);
+
+        /// \brief Read a raw data array into an Acoustic Map object. Allows for alternate file reading methods
+        ///
+        /// \param[in] sceneIR A pointer to the Acoustic Map object
+        /// \param[in] data A pointer to the raw data that should be read
+        /// \param[in] dataLength The number of bytes in the raw data
+        /// \return Returns an ovrResult indicating success or failure
         int AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength);
 
         /***********************************************************************************/
         // Control Zone API
+        /// \brief Create a new Control Zone object
+        ///
+        /// \param[out] control A pointer to the Control Zone object
+        /// \return Returns an ovrResult indicating success or failure
         int CreateControlZone(out IntPtr control);
+
+        /// \brief Destroy a new Control Zone object
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \return Returns an ovrResult indicating success or failure
         int DestroyControlZone(IntPtr control);
+
+        /// \brief Enable or Disable Control Zone object
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[in] enabled bool specifying if the Control Zone should be enabled or disabled
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneSetEnabled(IntPtr control, bool enabled);
+
+        /// \brief Get whether a Control Zone object is enabled or disabled
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[out] enabled bool specifying if the Control Zone is enabled or disabled
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneGetEnabled(IntPtr control, out bool enabled);
+
+        /// \brief Set the transform of a Control Zone object
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[in] matrix The transform to apply represented in a 4x4 matrix
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneSetTransform(IntPtr control, in Matrix4x4 matrix);
+
+        /// \brief Get the transform currently applied to a Control Zone object
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[out] matrix4x4 The transform currently applied to the Control Zone represented in a 4x4 matrix
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneGetTransform(IntPtr control, out float[] matrix4x4);
+
+        /// \brief Set the boundaries of a Control Zone object.
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[in] sizeX The width of the boundary
+        /// \param[in] sizeY The height of the boundary
+        /// \param[in] sizeZ The depth of the boundary
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneSetBox(IntPtr control, float sizeX, float sizeY, float sizeZ);
+
+        /// \brief Get the boundaries of a Control Zone object.
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[out] sizeX The size of the boundary along the x axis
+        /// \param[out] sizeY The size of the boundary along the y axis
+        /// \param[out] sizeZ The size of the boundary along the z axis
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneGetBox(IntPtr control, out float sizeX, out float sizeY, out float sizeZ);
+
+        /// \brief Set the distance to fade outward from the boundaries of a Control Zone object.
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[in] fadeX The amount of fade in the x direction
+        /// \param[in] fadeY The amount of fade in the y direction
+        /// \param[in] fadeZ The amount of fade in the z direction
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneSetFadeDistance(IntPtr control, float fadeX, float fadeY, float fadeZ);
+
+        /// \brief Get the distance to fade outward from the boundaries of a Control Zone object.
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[out] fadeX The amount of fade in the x direction
+        /// \param[out] fadeY The amount of fade in the y direction
+        /// \param[out] fadeZ The amount of fade in the z direction
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneGetFadeDistance(IntPtr control, out float fadeX, out float fadeY, out float fadeZ);
+
+        /// \brief Set a property of the Control Zone object for a particular frequency
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[in] property The property of the Control Zone to set
+        /// \param[in] frequency The frequency to change the property at in Hz
+        /// \param[in] value The new value of the property at frequency
+        /// \return Returns an ovrResult indicating success or failure
         int ControlZoneSetFrequency(IntPtr control, ControlZoneProperty property, float frequency, float value);
+
+        /// \brief Remove all values set for a particular property of a Control Zone object
+        ///
+        /// \param[in] control A pointer to the Control Zone object
+        /// \param[in] property The property of the Control Zone to set
         int ControlZoneReset(IntPtr control, ControlZoneProperty property);
     }
 
@@ -317,7 +666,9 @@ public class MetaXRAcousticNativeInterface
     /***********************************************************************************/
     public class UnityNativeInterface : INativeInterface
     {
-        // The name used for the plugin DLL.
+        /// \brief Name of the binary this interface wraps.
+        ///
+        /// This value can be used in  `[DllImport(binaryName)]` decorators and tells Unity what the binary name is for the Unity plug-in.
         public const string binaryName = "MetaXRAudioUnity";
 
         /***********************************************************************************/
@@ -337,6 +688,13 @@ public class MetaXRAcousticNativeInterface
         }
         int version = 0;
 
+
+        /// \brief Get the handle to the current context, creating one if necessary.
+        ///
+        /// Note that Unity's editor, player, and standalone builds will have different contexts.
+        ///
+        /// \param[out] context The returned handle to the context.
+        /// \return Returns an ovrResult indicating success or failure.
         [DllImport(binaryName)]
         public static extern int ovrAudio_GetPluginContext(out IntPtr context);
 
@@ -912,7 +1270,9 @@ public class MetaXRAcousticNativeInterface
     /***********************************************************************************/
     public class WwisePluginInterface : INativeInterface
     {
-        // The name used for the plugin DLL.
+        /// \brief Name of the binary this interface wraps.
+        ///
+        /// This value can be used in  `[DllImport(binaryName)]` decorators and tells Unity what the binary name is for the Wwise plug-in.
         public const string binaryName = "MetaXRAudioWwise";
         /***********************************************************************************/
         // Context API: Required to create internal context if it does not exist yet
@@ -932,6 +1292,11 @@ public class MetaXRAcousticNativeInterface
             }
         }
 
+        /// \brief Get the handle to the current context, creating one if necessary.
+        ///
+        /// Note that Unity's editor, player, and standalone builds will have different contexts.
+        ///
+        /// \return The returned handle to the context.
         [DllImport(binaryName)]
         public static extern IntPtr getOrCreateGlobalOvrAudioContext();
 
@@ -1504,7 +1869,9 @@ public class MetaXRAcousticNativeInterface
     /***********************************************************************************/
     public class FMODPluginInterface : INativeInterface
     {
-        // The name used for the plugin DLL.
+        /// \brief Name of the binary this interface wraps.
+        ///
+        /// This value can be used in  `[DllImport(binaryName)]` decorators and tells Unity what the binary name is for the FMOD plug-in.
         public const string binaryName = "MetaXRAudioFMOD";
 
         /***********************************************************************************/
@@ -1524,6 +1891,12 @@ public class MetaXRAcousticNativeInterface
             }
         }
 
+        /// \brief Get the handle to the current context, creating one if necessary.
+        ///
+        /// Note that Unity's editor, player, and standalone builds will have different contexts.
+        ///
+        /// \param[out] context The returned handle to the context.
+        /// \return Returns an ovrResult indicating success or failure.
         [DllImport(binaryName)]
         public static extern int ovrAudio_GetPluginContext(out IntPtr context);
 

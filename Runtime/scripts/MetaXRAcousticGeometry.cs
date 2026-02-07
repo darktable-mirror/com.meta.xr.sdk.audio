@@ -40,6 +40,8 @@ using UnityEngine.Profiling;
 using UnityEngine.Serialization;
 using Native = MetaXRAcousticNativeInterface;
 
+/// \brief Class that allows mesh analysis to precompute an Acoustic Geometry
+/// \see MetaXRAcousticNativeInterface
 internal class MetaXRAcousticGeometry : MonoBehaviour
 {
     internal static bool AUTO_VALIDATE = true;
@@ -49,10 +51,6 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     //-------
     // PUBLIC
 
-    /// The path to the serialized mesh file that holds the preprocessed mesh geometry.
-    /**
-      * This path should be relative to the Application.dataPath directory.
-      */
     [SerializeField]
     [FormerlySerializedAs("relativeFilePath_")]
     private string relativeFilePath = "";
@@ -61,6 +59,8 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 #else
     internal string RelativeFilePath => relativeFilePath;
 #endif
+    /// \brief Absolute path to the serialized mesh file that holds the preprocessed mesh geometry.
+    /// This path should be absolute and somewhere inside Application.dataPath directory.
     internal string AbsoluteFilePath
     {
         get => Path.GetFullPath(Path.Combine(Application.dataPath, RelativeFilePath));
@@ -75,9 +75,13 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
     }
 
+    /// \brief If this is set, then the serialized acoustic geometry file (.xrageo) is used as the mesh data source.
     [SerializeField]
     internal bool FileEnabled = true;
 
+    /// \brief  This button chooses whether or not child meshes of the GameObject where the geometry script is attached are included in the acoustic geometry.
+    /// This option can be used to automatically combine all meshes within an object hierarchy into a single optimized acoustic geometry.
+    /// This will be faster for ray tracing and produce better quality diffraction than many smaller meshes. This is typically used for the static meshes in a scene.
     [SerializeField]
     internal bool IncludeChildMeshes = true;
 
@@ -97,6 +101,10 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
     }
 
+    /// \brief A button that chooses whether or not diffraction information should be computed for a mesh. This enables sound to propagate around that mesh.
+    /// If disabled, no diffraction will occur around the mesh and the direct sound will be completely occluded when the source is not visible.
+    /// It may be useful to only enable diffraction on large meshes (e.g. scene environment geometry), but to disable it on small props and clutter objects.
+    /// This can improve the performance by reducing the total number of edges in the scene.
     internal bool EnableDiffraction
     {
         get => (Flags & MeshFlags.ENABLE_DIFFRACTION) != 0;
@@ -109,6 +117,10 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
     }
 
+    /// \brief The maximum allowed error for the automatic acoustic geometry simplification.
+    /// This control specifies an error threshold in meters (regardless of which units the game engine uses).
+    /// A relatively large error threshold can be used to reduce the geometry complexity (memory size and runtime ray tracing cost).
+    /// The default error threshold is 0.1, i.e. 10 cm. The threshold may be increased further (up to around 0.5 meters) without any problems in most cases.
     [SerializeField]
     private float maxSimplifyError = 0.1f;
     internal float MaxSimplifyError
@@ -124,6 +136,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
     }
 
+    /// \brief The minimum angle (degrees) that there must be between two adjacent face normals for their edge to be marked as diffracting.
     [SerializeField]
     private float minDiffractionEdgeAngle = 1.0f;
     internal float MinDiffractionEdgeAngle
@@ -141,6 +154,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
     }
 
+    /// \brief The minimum length in meters that an edge should have for it to be marked as diffracting.
     [SerializeField]
     private float minDiffractionEdgeLength = 0.01f;
     internal float MinDiffractionEdgeLength
@@ -156,6 +170,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
     }
 
+    /// \brief The maximum distance in meters that a diffraction flag extends out from the edge.
     [SerializeField]
     private float flagLength = 1.0f;
     internal float FlagLength
@@ -171,6 +186,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
     }
 
+    /// \brief The Level of Detail to use for acoustics, the higher the LOD the less polygons. Typically the highest LOD will be sufficient and the most efficient.
     [SerializeField]
     private int lodSelection = 0;
     internal int LodSelection
@@ -179,7 +195,8 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         set => lodSelection = value;
     }
 
-
+    /// \brief If enabled the acoustic geometry will be computed using the physics Mesh Colliders. If enabled, Meta XR Acoustic Material scripts will be ignored.
+    /// The mapping between Mesh Colliders and Meta XR Acoustic Material Properties can be configured in **Project Settings > Meta XR Acoustics**
     [SerializeField]
     private bool useColliders = false;
     internal bool UseColliders
@@ -188,10 +205,12 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         set => useColliders = value;
     }
 
+    /// \brief If enabled, the overrideExcludeTags will be used to exclude objects from the baked Acoustic Geometry instead of the project setting Exclude Tags
     [SerializeField]
     private bool overrideExcludeTagsEnabled = false;
     internal bool OverrideExcludeTagsEnabled { get => overrideExcludeTagsEnabled; set => overrideExcludeTagsEnabled = value; }
 
+    /// \brief The list of tags to be used for excluding objects from the baked Acoustic Geometry instead of the project setting Exclude Tags.
     [SerializeField]
     private string[] overrideExcludeTags = null;
     internal string[] OverrideExcludeTags { get => overrideExcludeTags; set => overrideExcludeTags = value; }
@@ -1326,7 +1345,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
             ++counter;
 
             // sanity check to prevent hang
-            if (counter > 10000) { 
+            if (counter > 10000) {
                 Debug.LogError("Unable to find suitable file name", gameObject);
                 return "";
             }

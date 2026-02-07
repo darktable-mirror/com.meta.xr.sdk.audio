@@ -31,13 +31,30 @@ namespace Meta.XR.Acoustics
 {
     //***********************************************************************
     // Public Fields
+    /// \brief This class defines all the properties which describe an Acoustic Material
+    ///
+    /// The properties of a material include absorption, transmission, and scattering.
+    ///
+    /// \see MaterialProperty
     [Serializable]
     public class MaterialData
     {
+        /// \brief  The fraction of sound arriving at a surface that is absorbed by the material.
+        /// This controls how long it takes for the reverb to decay, with higher absorption leading to shorter reverberation times.
+        /// This is the Sabine absorption coefficient, which is the absorption averaged over all angles of incidence.
+        /// The absorption coefficient is the opposite of the reflection coefficient (1 - absorption). The default absorption is 0.1.
         [SerializeField]
         internal Spectrum absorption = new Spectrum();
+        /// \brief The fraction of sound arriving at a surface that is transmitted through the material.
+        /// This value is in the range 0 to 1, where 0 indicates a material that is acoustically opaque, and 1 indicates a material that is acoustically transparent.
+        /// To preserve energy in the simulation, the following condition must hold: (1 - absorption + transmission) <= 1.
+        ///  If this condition is not met, the transmission and absorption coefficients will be modified to enforce energy conservation.
+        /// The default transmission is 0. Note that increasing the transmission coefficient has the effect of reducing the reverberation time because it allows some of the sound to escape the geometry.
         [SerializeField]
         internal Spectrum transmission = new Spectrum();
+        /// \brief The fraction of sound arriving at a surface that is scattered. The scattering coefficient describes how rough or smooth the surface is for sound of a given frequency.
+        /// A value of 0 indicates a perfectly mirror-like (specular) reflection, while a value of 1 indicates a perfectly diffuse/matte reflection. The default value is 0.5.
+        /// The impact of the scattering coefficient on the audio is subtle, and it primarily affects the early reflections.
         [SerializeField]
         internal Spectrum scattering = new Spectrum();
         [SerializeField]

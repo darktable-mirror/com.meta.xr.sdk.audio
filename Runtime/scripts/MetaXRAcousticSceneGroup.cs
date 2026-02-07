@@ -21,9 +21,12 @@
 
 using UnityEngine;
 
+/// \brief This class creates an optional way to incorporate multiple scenes into a single baking for large spaces that use additive scene loading for streaming geometry.
+/// If there is no scene group specified, then the map will bake the scene it's in.
 [CreateAssetMenu(menuName = "MetaXRAudio/Acoustic Scene Group")]
 internal class MetaXRAcousticSceneGroup : ScriptableObject
 {
+    /// \brief An array of scene guids which Acoustic Maps can be grouped to
     [SerializeField]
     internal string[] sceneGuids;
 }

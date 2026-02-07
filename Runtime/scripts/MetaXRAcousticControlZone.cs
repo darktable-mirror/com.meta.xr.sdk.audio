@@ -31,6 +31,11 @@ using Native = MetaXRAcousticNativeInterface;
 using Point = Meta.XR.Acoustics.Spectrum.Point;
 using Spectrum = Meta.XR.Acoustics.Spectrum;
 
+/// \brief Class that provides control over the Control Zone behavior
+///
+/// The Control Zone is a 3D box that can be used to modify the reverb properties of points inside it. Use the transform to adjust the size and position of the Control Zone.
+///
+/// \see MetaXRAcousticNativeInterface
 internal sealed class MetaXRAcousticControlZone : MonoBehaviour
 {
     //***********************************************************************
@@ -39,10 +44,13 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
     internal class State
     {
         [SerializeField]
+        /// \brief Adjusts the reverb decay time of points inside the zone
         internal Spectrum rt60 = new Spectrum();
         [SerializeField]
+        /// \brief Adjusts the reverb level of points inside the zone
         internal Spectrum reverbLevel = new Spectrum();
         [SerializeField]
+        /// \brief A value in meters to describe the distance over which to fade out the Control Zone adjustments starting from the boundary
         internal float fadeDistance = 1.0f;
         internal void Clone(State other)
         {
@@ -175,7 +183,7 @@ internal sealed class MetaXRAcousticControlZone : MonoBehaviour
     {
         if (_controlHandle == IntPtr.Zero)
             return;
-        
+
         Native.Interface.ControlZoneSetBox(
             _controlHandle, NativeBoxSize.x, NativeBoxSize.y, NativeBoxSize.z);
         Native.Interface.ControlZoneSetFadeDistance(

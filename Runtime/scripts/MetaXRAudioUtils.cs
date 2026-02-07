@@ -26,8 +26,10 @@
 using System.IO;
 using System.Linq;
 
+/// \brief Class to provide miscellaneous utility functions
 internal class MetaXRAudioUtils
 {
+    /// \brief Returns the case-sensitive path for a file
     internal static string GetCaseSensitivePathForFile(string path)
     {
         if (!File.Exists(path))

@@ -27,6 +27,7 @@ using Meta.XR.Acoustics;
 using UnityEngine;
 using Native = MetaXRAcousticNativeInterface;
 
+/// \brief This class exposes controls for the Meta XR Acoustics SDK at a project level
 public class MetaXRAcousticSettings : ScriptableObject
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -41,6 +42,9 @@ public class MetaXRAcousticSettings : ScriptableObject
     [SerializeField]
     [Tooltip("Select which type of acoustic modeling system is used to generate reverb and reflections.")]
     private AcousticModel acousticModel = Meta.XR.Acoustics.AcousticModel.Automatic;
+
+    /// \brief The reflections engine used during runtime
+    /// \see AcousticModel
     public AcousticModel AcousticModel
     {
         get => acousticModel;
@@ -57,6 +61,8 @@ public class MetaXRAcousticSettings : ScriptableObject
     [SerializeField]
     [Tooltip("When enabled and using geometry, all spatailized AudioSources will diffract (propagate around corners and obstructions)")]
     private bool diffractionEnabled = true;
+
+    /// \brief When enabled and using geometry, all spatailized AudioSources will diffract (propagate around corners and obstructions)
     internal bool DiffractionEnabled
     {
         get => diffractionEnabled;
@@ -72,6 +78,8 @@ public class MetaXRAcousticSettings : ScriptableObject
     [SerializeField]
     [Tooltip("Geometry will exclude children with these tags")]
     private string[] excludeTags = new string[0];
+
+    /// \brief Geometry will exclude children with these tags
     internal string[] ExcludeTags { get => excludeTags; set => excludeTags = value; }
 
     [SerializeField]
@@ -97,6 +105,8 @@ public class MetaXRAcousticSettings : ScriptableObject
     }
 
     private static MetaXRAcousticSettings instance;
+
+    /// \brief The singleton instance of the project settings
     public static MetaXRAcousticSettings Instance
     {
         get

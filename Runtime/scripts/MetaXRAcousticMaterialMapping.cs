@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using Native = MetaXRAcousticNativeInterface;
 
+/// \brief This class provides a way of mapping Unity PhysicMaterials to MetaXRAcousticMaterials
 internal class MetaXRAcousticMaterialMapping : ScriptableObject
 {
     internal MetaXRAcousticMaterialProperties findAcousticMaterial(PhysicMaterial pmat)
@@ -42,15 +43,19 @@ internal class MetaXRAcousticMaterialMapping : ScriptableObject
     [Serializable]
     internal class Pair
     {
+        /// \brief The Unity PhysicMaterial to be mapped to be connected with the selected MetaXRAcousticMaterial
         [SerializeField]
         internal PhysicMaterial physicMaterial;
+        /// \brief The MetaXRAcousticMaterialProperties to be connected with the selected Physic Material
         [SerializeField]
         internal MetaXRAcousticMaterialProperties acousticMaterial;
     }
 
+    /// \brief The array of pairs that map Unity PhysicMaterials to MetaXRAcousticMaterialProperties
     [HideInInspector, SerializeField]
     internal Pair[] mapping;
 
+    /// \brief The fallback material to use when there is no mapping for a given PhysicMaterial
     [HideInInspector, SerializeField, Tooltip("Acoustic material to apply when there is no physics material.")]
     internal MetaXRAcousticMaterialProperties fallbackMaterial;
 

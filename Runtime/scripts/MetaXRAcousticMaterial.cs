@@ -28,11 +28,14 @@ using System.Linq;
 using UnityEngine;
 using Native = MetaXRAcousticNativeInterface;
 
+/// \brief This class is used for to create or edit an Acoustic Material
 public sealed class MetaXRAcousticMaterial : MonoBehaviour, Meta.XR.Acoustics.IMaterialDataProvider
 {
     //***********************************************************************
     // Public Fields
 
+    /// \brief The properties of this material
+    /// \see MetaXRAcousticMaterialProperties
     [SerializeField]
     private MetaXRAcousticMaterialProperties properties;
     internal MetaXRAcousticMaterialProperties Properties
@@ -41,11 +44,14 @@ public sealed class MetaXRAcousticMaterial : MonoBehaviour, Meta.XR.Acoustics.IM
         set => properties = value;
     }
 
+    /// \brief If true the user has edited the properties beyond the default presets
     [SerializeField]
     private bool hasCustomData = false;
 
+    /// \brief This is a reference to the material properties the user has edited
     [SerializeField]
     internal Meta.XR.Acoustics.MaterialData customData = null;
+    /// \brief This holds either a material preset or the user's custom material data
     public Meta.XR.Acoustics.MaterialData Data => hasCustomData ? customData : properties?.Data;
 
     internal Color Color => Data != null ? Data.color : Color.magenta;
