@@ -612,7 +612,27 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         public List<TerrainMaterial> Terrains { get => terrains; }
     }
 
-    private static void traverseMeshHierarchy(GameObject obj, bool includeChildren, string[] excludeTags, bool parentWasExcluded, int lodSelection, ITransformVisitor visitor, System.Object parentData = null)
+    // Search an LOD group to determine if an object is used by any renderer it contains.
+    private static bool isObjectUsedByLODGroup(GameObject obj, LODGroup lod)
+    {
+        LOD[] lods = lod.GetLODs();
+
+        for (int i = 0; i < lods.Length; i++)
+        {
+            Renderer[] lodRenderers = lods[i].renderers;
+            for (int j = 0; j < lodRenderers.Length; j++)
+            {
+                if (lodRenderers[j].gameObject == obj)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static void traverseMeshHierarchy(GameObject obj, bool includeChildren, string[] excludeTags, bool parentWasExcluded, int lodSelection, LODGroup parentLOD, ITransformVisitor visitor, System.Object parentData = null)
     {
         if (!obj.activeInHierarchy)
         {
@@ -637,7 +657,6 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
                 if (isLodTrivial)
                 {
                     obj = lods[0].renderers[0].gameObject;
-                    includeChildren = false;
                 }
                 else
                 {
@@ -653,21 +672,25 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
                     // Some meshes split their mesh into multiple cells, which is why we can't just use a single renderer
                     for (int i = 0; i < lodRenderers.Length; i++)
                     {
-                        includeChildren = false;
                         if (lodRenderers[i] != null)
                         {
                             if (lodRenderers[i].gameObject == obj)
                                 continue; // avoid infinite recursion
 
-                            traverseMeshHierarchy(lodRenderers[i].gameObject, includeChildren, excludeTags, parentWasExcluded, lodSelection, visitor, parentData);
+                            traverseMeshHierarchy(lodRenderers[i].gameObject, includeChildren, excludeTags, parentWasExcluded, lodSelection, null, visitor, parentData);
                         }
                     }
                 }
+
+                parentLOD = lodGroup;
             }
         }
 
+        // Determine if this object should be visited.
+        // Objects can be excluded based on tags, parent exclusion, or if the object is part of an LOD group.
         bool shouldVisit = true;
-        if (excludeTags.Contains(obj.tag) || parentWasExcluded)
+        bool nonLODMesh = (parentLOD != lodGroup) && (parentLOD != null && isObjectUsedByLODGroup(obj, parentLOD));
+        if (excludeTags.Contains(obj.tag) || parentWasExcluded || nonLODMesh)
         {
             MetaXRAcousticMaterial mat = obj.GetComponent<MetaXRAcousticMaterial>();
             if (mat == null || !mat.enabled)
@@ -695,7 +718,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
             foreach (Transform child in obj.transform)
             {
                 if (child.GetComponent<MetaXRAcousticGeometry>() == null)
-                    traverseMeshHierarchy(child.gameObject, includeChildren, excludeTags, !shouldVisit, lodSelection, visitor, parentData);
+                    traverseMeshHierarchy(child.gameObject, includeChildren, excludeTags, !shouldVisit, lodSelection, parentLOD, visitor, parentData);
 #if META_XR_ACOUSTIC_INFO
                 else
                     Debug.Log($"Skipping child: {child.name}, it has it's own {nameof(MetaXRAcousticGeometry)} component");
@@ -722,7 +745,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         else
             gatherer = new MeshGatherer(ignoreStatic);
 
-        traverseMeshHierarchy(meshObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, gatherer);
+        traverseMeshHierarchy(meshObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, null, gatherer);
 
         //***********************************************************************
         // Count the number of vertices and indices.
@@ -1347,7 +1370,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     internal bool IsOlder(DateTime timeStamp)
     {
         AgeChecker ageChecker = new AgeChecker(timeStamp, useColliders);
-        traverseMeshHierarchy(gameObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, ageChecker);
+        traverseMeshHierarchy(gameObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, null, ageChecker);
         return ageChecker.isOlder || ageChecker.hash != HierarchyHash;
     }
 
@@ -1410,7 +1433,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     internal void AppendHash(ref Hash128 hash)
     {
         HashAppender hashAppender = new HashAppender(hash,useColliders);
-        traverseMeshHierarchy(gameObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, hashAppender);
+        traverseMeshHierarchy(gameObject, IncludeChildMeshes, ExcludeTags, false, lodSelection, null, hashAppender);
         hash = hashAppender.Hash;
     }
 

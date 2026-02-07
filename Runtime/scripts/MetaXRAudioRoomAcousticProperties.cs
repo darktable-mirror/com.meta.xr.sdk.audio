@@ -24,9 +24,8 @@
  ***********************************************************************************/
 
 using System;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.Playables;
 
 /// \brief Class that provides easy control over the shoebox room simulation.
 ///
@@ -102,10 +101,6 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
 
     private const int kAudioBandCount = 4;
     private float[] clutterFactorBands = new float[kAudioBandCount];
-
-#if UNITY_EDITOR
-    private AudioListener currentListener = null;
-#endif
 
     /// \brief Array of 6 materials, each with 4 frequency dependent reflection coefficients in [Left, Right, Ceiling, Floor, Front, Back] order.
     ///
@@ -248,30 +243,67 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
         wallMaterials[wallIndex * 4 + 3] = band3;
     }
 
+
 #if UNITY_EDITOR
-    void OnDrawGizmosSelected()
+    private Component _AudioListener = null;
+
+    private Component AudioListener
     {
-        Vector3 center = transform.position;
+        get
+        {
+            if (_AudioListener == null)
+            {
+                _AudioListener = FindFMODListener();
+                // null fmod listener, find unity listener...
+                if (_AudioListener == null)
+                    _AudioListener = FindFirstObjectByType<AudioListener>();
+            }
+            return _AudioListener;
+
+            // BFS find the FMOD studio listener without directly using type.
+            // We could be using unity native.
+            Component FindFMODListener()
+            {
+                Component FMODListener = null;
+                GameObject[] rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+                // BFS because camera is unlikely to be deeply nested...
+                Queue<GameObject> gameObjectQueue = new Queue<GameObject>(rootObjects);
+                while (gameObjectQueue.Count > 0)
+                {
+                    GameObject go = gameObjectQueue.Dequeue();
+                    const string FMODListenerTypeName = "StudioListener";
+                    FMODListener = go.GetComponent(FMODListenerTypeName);
+                    if (FMODListener != null)
+                        break;
+
+                    foreach(Transform child in go.transform)
+                        gameObjectQueue.Enqueue(child.gameObject);
+                }
+
+                return FMODListener;
+            }
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Vector3 gizmoPosition = transform.position;
         if (lockPositionToListener)
         {
-            if (!currentListener)
+            Component ListenerComponent = AudioListener;
+            if(ListenerComponent == null)
             {
-#pragma warning disable CS0618 // Type or member is obsolete
-                currentListener = FindObjectOfType<AudioListener>();
-#pragma warning restore CS0618 // Type or member is obsolete
-                if(!currentListener)
-                {
-                    Debug.LogWarning("No Listener Found in Scene to attach room gizmo , Please setup atleast one listener!");
-                }
-            }
-            else
-            {
-                center = currentListener.transform.position;
+                Debug.LogWarning("[MetaXRAudioRoomAcousticProperties.OnDrawGizmosSelected] Attempting to draw gizmo with lockPositionToListener = true " +
+                    "but we did not find an Audio Listener (Unity native or FMOD) to draw gizmo from. IF using FMOD: attach StudioListener to gameobject. " +
+                    "IF using unity audio with meta audio sdk, attach unity AudioListener component to gameobject.");
+                return;
             }
 
+            gizmoPosition = ListenerComponent.transform.position;
         }
+
         Gizmos.color = new Color(0.8f, 0.8f, 0.8f, 0.25f);
-        Gizmos.DrawCube(center, new Vector3(width, height, depth));
+        Gizmos.DrawCube(gizmoPosition, new Vector3(width, height, depth));
     }
 #endif
 }
