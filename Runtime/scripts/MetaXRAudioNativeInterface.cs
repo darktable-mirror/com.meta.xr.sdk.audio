@@ -32,80 +32,14 @@ namespace Meta
             /***********************************************************************************/
             // ENUMS and STRUCTS
             /***********************************************************************************/
-            public enum FaceType : uint
-            {
-                TRIANGLES = 0,
-                QUADS
-            }
-
-            public enum MaterialProperty : uint
-            {
-                ABSORPTION = 0,
-                TRANSMISSION,
-                SCATTERING
-            }
-
-            // Matches internal mesh layout
-            [StructLayout(LayoutKind.Sequential, Pack = 1)]
-            public struct MeshGroup
-            {
-                public UIntPtr indexOffset;
-                public UIntPtr faceCount;
-                [MarshalAs(UnmanagedType.U4)]
-                public FaceType faceType;
-                public IntPtr material;
-            }
-
             [Flags]
-            public enum SceneIRStatus : uint
-            {
-                EMPTY = 0,
-                MAPPED = (1 << 0),
-                READY = (1 << 1) | MAPPED
-            }
-
-            [Flags]
-            public enum SceneIRFlags : uint
+            public enum EnableFlag : uint
             {
                 NONE = 0,
-                STATIC_ONLY = (1 << 0),
-                NO_FLOATING = (1 << 1),
-                MAP_ONLY = (1 << 2),
-                DIFFRACTION = (1 << 3)
-            }
-
-            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-            public delegate bool ProgressCallback( IntPtr userData, string description, float progress );
-
-            [StructLayout(LayoutKind.Sequential)]
-            public struct SceneIRCallbacks
-            {
-                public IntPtr userData;
-
-                [MarshalAs(UnmanagedType.FunctionPtr)]
-                public ProgressCallback progress;
-            }
-
-            [StructLayout(LayoutKind.Sequential)]
-            public struct SceneIRParameters
-            {
-                public UIntPtr thisSize;
-                public SceneIRCallbacks callbacks;
-                public UIntPtr threadCount;
-                public UIntPtr reflectionCount;
-
-                [MarshalAs(UnmanagedType.U4)]
-                public SceneIRFlags flags;
-
-                public float minResolution;
-                public float maxResolution;
-
-                public float headHeight;
-                public float maxHeight;
-
-                public float gravityVectorX;
-                public float gravityVectorY;
-                public float gravityVectorZ;
+                SIMPLE_ROOM_MODELING = 2,
+                LATE_REVERBERATION = 3,
+                RANDOMIZE_REVERB = 4,
+                PERFORMANCE_COUNTERS = 5,
             }
         }
     }
@@ -189,59 +123,13 @@ public class MetaXRAudioNativeInterface
 
     public interface NativeInterface
     {
-        /***********************************************************************************/
-        // Settings API
-        int SetPropagationQuality(float quality);
-        int SetPropagationThreadAffinity(UInt64 cpuMask);
-
-        /***********************************************************************************/
-        // Geometry API
-        int CreateAudioGeometry(out IntPtr geometry);
-        int DestroyAudioGeometry(IntPtr geometry);
-        int AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                        float[] vertices, int vertexCount,
-                                                        int[] indices, int indexCount,
-                                                        MeshGroup[] groups, int groupCount);
-        int AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4);
-        int AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4);
-        int AudioGeometryWriteMeshFile(IntPtr geometry, string filePath);
-        int AudioGeometryReadMeshFile(IntPtr geometry, string filePath);
-        int AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength);
-        int AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath);
-
-        /***********************************************************************************/
-        // Material API
-        int AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value);
-        int CreateAudioMaterial(out IntPtr material);
-        int DestroyAudioMaterial(IntPtr material);
-        int AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value);
-        int AudioMaterialReset(IntPtr material, MaterialProperty property);
-
-        /***********************************************************************************/
-        // Scene IR API
-        int CreateAudioSceneIR(out IntPtr sceneIR);
-        int DestroyAudioSceneIR(IntPtr sceneIR);
-        int AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status);
-        int InitializeAudioSceneIRParameters(out SceneIRParameters parameters);
-        int AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters);
-        int AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters);
-        int AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount);
-        int AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount);
-        int AudioSceneIRWriteFile(IntPtr sceneIR, string filePath);
-        int AudioSceneIRReadFile(IntPtr sceneIR, string filePath);
-        int AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength);
 
         /***********************************************************************************/
         // Shoebox Reflections API
         int SetAdvancedBoxRoomParameters(float width, float height, float depth,
             bool lockToListenerPosition, Vector3 position, float[] wallMaterials);
-
         int SetRoomClutterFactor(float[] clutterFactor);
-
         int SetReflectionModel(int reflectionModel);
-        int SetEnabled(int feature, bool enabled);
-
         int SetDynamicRoomRaysPerSecond(int RaysPerSecond);
         int SetDynamicRoomInterpSpeed(float InterpSpeed);
         int SetDynamicRoomMaxWallDistance(float MaxWallDistance);
@@ -266,209 +154,7 @@ public class MetaXRAudioNativeInterface
         [DllImport(binaryName)]
         public static extern int ovrAudio_GetPluginContext(out IntPtr context, uint clientType);
 
-        /***********************************************************************************/
-        // Settings API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetPropagationQuality(IntPtr context, float quality);
-        public int SetPropagationQuality(float quality)
-        {
-            return ovrAudio_SetPropagationQuality(context, quality);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetPropagationThreadAffinity(IntPtr context, UInt64 cpuMask);
-        public int SetPropagationThreadAffinity(UInt64 cpuMask)
-        {
-            return ovrAudio_SetPropagationThreadAffinity(context, cpuMask);
-        }
-
-        /***********************************************************************************/
-        // Geometry API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioGeometry(IntPtr context, out IntPtr geometry);
-        public int CreateAudioGeometry(out IntPtr geometry)
-        {
-            return ovrAudio_CreateAudioGeometry(context, out geometry);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioGeometry(IntPtr geometry);
-        public int DestroyAudioGeometry(IntPtr geometry)
-        {
-            return ovrAudio_DestroyAudioGeometry(geometry);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                                        float[] vertices, UIntPtr verticesBytesOffset, UIntPtr vertexCount, UIntPtr vertexStride, ovrAudioScalarType vertexType,
-                                                                        int[] indices, UIntPtr indicesByteOffset, UIntPtr indexCount, ovrAudioScalarType indexType,
-                                                                        MeshGroup[] groups, UIntPtr groupCount);
-
-        public int AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                        float[] vertices, int vertexCount,
-                                                        int[] indices, int indexCount,
-                                                        MeshGroup[] groups, int groupCount)
-        {
-            return ovrAudio_AudioGeometryUploadMeshArrays(geometry,
-                vertices, UIntPtr.Zero, (UIntPtr)vertexCount, UIntPtr.Zero, ovrAudioScalarType.Float32,
-                indices, UIntPtr.Zero, (UIntPtr)indexCount, ovrAudioScalarType.UInt32,
-                groups, (UIntPtr)groupCount);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4);
-        public int AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4)
-        {
-            return ovrAudio_AudioGeometrySetTransform(geometry, matrix4x4);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4);
-        public int AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4)
-        {
-            return ovrAudio_AudioGeometryGetTransform(geometry, out matrix4x4);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryWriteMeshFile(IntPtr geometry, string filePath);
-        public int AudioGeometryWriteMeshFile(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryWriteMeshFile(geometry, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryReadMeshFile(IntPtr geometry, string filePath);
-        public int AudioGeometryReadMeshFile(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryReadMeshFile(geometry, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength);
-        public int AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength)
-        {
-            return ovrAudio_AudioGeometryReadMeshMemory(geometry, data, dataLength);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath);
-        public int AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryWriteMeshFileObj(geometry, filePath);
-        }
-
-        /***********************************************************************************/
-        // Material API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioMaterial(IntPtr context, out IntPtr material);
-        public int CreateAudioMaterial(out IntPtr material)
-        {
-            return ovrAudio_CreateAudioMaterial(context, out material);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioMaterial(IntPtr material);
-        public int DestroyAudioMaterial(IntPtr material)
-        {
-            return ovrAudio_DestroyAudioMaterial(material);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value);
-        public int AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value)
-        {
-            return ovrAudio_AudioMaterialSetFrequency(material, property, frequency, value);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value);
-        public int AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value)
-        {
-            return ovrAudio_AudioMaterialGetFrequency(material, property, frequency, out value);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialReset(IntPtr material, MaterialProperty property);
-        public int AudioMaterialReset(IntPtr material, MaterialProperty property)
-        {
-            return ovrAudio_AudioMaterialReset(material, property);
-        }
-
-        /***********************************************************************************/
-        // Scene IR API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioSceneIR(IntPtr context, out IntPtr sceneIR);
-        public int CreateAudioSceneIR(out IntPtr sceneIR)
-        {
-            return ovrAudio_CreateAudioSceneIR(context, out sceneIR);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioSceneIR(IntPtr sceneIR);
-        public int DestroyAudioSceneIR(IntPtr sceneIR)
-        {
-            return ovrAudio_DestroyAudioSceneIR(sceneIR);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status);
-        public int AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status)
-        {
-            return ovrAudio_AudioSceneIRGetStatus(sceneIR, out status);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetStatus(out SceneIRParameters parameters);
-        public int InitializeAudioSceneIRParameters(out SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRGetStatus(out parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters);
-        public int AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRCompute(sceneIR, ref parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters);
-        public int AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRComputeCustomPoints(sceneIR, points, pointCount, ref parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount);
-        public int AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount)
-        {
-            return ovrAudio_AudioSceneIRGetPointCount(sceneIR, out pointCount);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount);
-        public int AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount)
-        {
-            return ovrAudio_AudioSceneIRGetPoints(sceneIR, points, maxPointCount);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRWriteFile(IntPtr sceneIR, string filePath);
-        public int AudioSceneIRWriteFile(IntPtr sceneIR, string filePath)
-        {
-            return  ovrAudio_AudioSceneIRWriteFile(sceneIR, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRReadFile(IntPtr sceneIR, string filePath);
-        public int AudioSceneIRReadFile(IntPtr sceneIR, string filePath)
-        {
-            return ovrAudio_AudioSceneIRReadFile(sceneIR, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength);
-        public int AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength)
-        {
-            return ovrAudio_AudioSceneIRReadMemory(sceneIR, data, dataLength);
-        }
-
-        /***********************************************************************************/
+    /***********************************************************************************/
         // Shoebox Reflections API
         [DllImport(binaryName)]
         private static extern int ovrAudio_SetAdvancedBoxRoomParametersUnity(IntPtr context, float width, float height, float depth,
@@ -498,6 +184,13 @@ public class MetaXRAudioNativeInterface
         [DllImport(binaryName)]
         private static extern int ovrAudio_Enable(IntPtr context, int what, int enable);
         public int SetEnabled(int feature, bool enabled)
+        {
+            return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
+        }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_Enable(IntPtr context, EnableFlag what, int enable);
+        public int SetEnabled(EnableFlag feature, bool enabled)
         {
             return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
         }
@@ -562,209 +255,6 @@ public class MetaXRAudioNativeInterface
         public static extern int ovrAudio_GetPluginContext(out IntPtr context, uint clientType);
 
         /***********************************************************************************/
-        // Settings API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetPropagationQuality(IntPtr context, float quality);
-        public int SetPropagationQuality(float quality)
-        {
-            return ovrAudio_SetPropagationQuality(context, quality);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetPropagationThreadAffinity(IntPtr context, UInt64 cpuMask);
-        public int SetPropagationThreadAffinity(UInt64 cpuMask)
-        {
-            return ovrAudio_SetPropagationThreadAffinity(context, cpuMask);
-        }
-
-        /***********************************************************************************/
-        // Geometry API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioGeometry(IntPtr context, out IntPtr geometry);
-        public int CreateAudioGeometry(out IntPtr geometry)
-        {
-            return ovrAudio_CreateAudioGeometry(context, out geometry);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioGeometry(IntPtr geometry);
-        public int DestroyAudioGeometry(IntPtr geometry)
-        {
-            return ovrAudio_DestroyAudioGeometry(geometry);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                                        float[] vertices, UIntPtr verticesBytesOffset, UIntPtr vertexCount, UIntPtr vertexStride, ovrAudioScalarType vertexType,
-                                                                        int[] indices, UIntPtr indicesByteOffset, UIntPtr indexCount, ovrAudioScalarType indexType,
-                                                                        MeshGroup[] groups, UIntPtr groupCount);
-
-        public int AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                        float[] vertices, int vertexCount,
-                                                        int[] indices, int indexCount,
-                                                        MeshGroup[] groups, int groupCount)
-        {
-            return ovrAudio_AudioGeometryUploadMeshArrays(geometry,
-                vertices, UIntPtr.Zero, (UIntPtr)vertexCount, UIntPtr.Zero, ovrAudioScalarType.Float32,
-                indices, UIntPtr.Zero, (UIntPtr)indexCount, ovrAudioScalarType.UInt32,
-                groups, (UIntPtr)groupCount);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4);
-        public int AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4)
-        {
-            return ovrAudio_AudioGeometrySetTransform(geometry, matrix4x4);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4);
-        public int AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4)
-        {
-            return ovrAudio_AudioGeometryGetTransform(geometry, out matrix4x4);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryWriteMeshFile(IntPtr geometry, string filePath);
-        public int AudioGeometryWriteMeshFile(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryWriteMeshFile(geometry, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryReadMeshFile(IntPtr geometry, string filePath);
-        public int AudioGeometryReadMeshFile(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryReadMeshFile(geometry, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength);
-        public int AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength)
-        {
-            return ovrAudio_AudioGeometryReadMeshMemory(geometry, data, dataLength);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath);
-        public int AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryWriteMeshFileObj(geometry, filePath);
-        }
-
-        /***********************************************************************************/
-        // Material API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioMaterial(IntPtr context, out IntPtr material);
-        public int CreateAudioMaterial(out IntPtr material)
-        {
-            return ovrAudio_CreateAudioMaterial(context, out material);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioMaterial(IntPtr material);
-        public int DestroyAudioMaterial(IntPtr material)
-        {
-            return ovrAudio_DestroyAudioMaterial(material);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value);
-        public int AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value)
-        {
-            return ovrAudio_AudioMaterialSetFrequency(material, property, frequency, value);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value);
-        public int AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value)
-        {
-            return ovrAudio_AudioMaterialGetFrequency(material, property, frequency, out value);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialReset(IntPtr material, MaterialProperty property);
-        public int AudioMaterialReset(IntPtr material, MaterialProperty property)
-        {
-            return ovrAudio_AudioMaterialReset(material, property);
-        }
-
-
-        /***********************************************************************************/
-        // Scene IR API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioSceneIR(IntPtr context, out IntPtr sceneIR);
-        public int CreateAudioSceneIR(out IntPtr sceneIR)
-        {
-            return ovrAudio_CreateAudioSceneIR(context, out sceneIR);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioSceneIR(IntPtr sceneIR);
-        public int DestroyAudioSceneIR(IntPtr sceneIR)
-        {
-            return ovrAudio_DestroyAudioSceneIR(sceneIR);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status);
-        public int AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status)
-        {
-            return ovrAudio_AudioSceneIRGetStatus(sceneIR, out status);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetStatus(out SceneIRParameters parameters);
-        public int InitializeAudioSceneIRParameters(out SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRGetStatus(out parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters);
-        public int AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRCompute(sceneIR, ref parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters);
-        public int AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRComputeCustomPoints(sceneIR, points, pointCount, ref parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount);
-        public int AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount)
-        {
-            return ovrAudio_AudioSceneIRGetPointCount(sceneIR, out pointCount);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount);
-        public int AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount)
-        {
-            return ovrAudio_AudioSceneIRGetPoints(sceneIR, points, maxPointCount);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRWriteFile(IntPtr sceneIR, string filePath);
-        public int AudioSceneIRWriteFile(IntPtr sceneIR, string filePath)
-        {
-            return  ovrAudio_AudioSceneIRWriteFile(sceneIR, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRReadFile(IntPtr sceneIR, string filePath);
-        public int AudioSceneIRReadFile(IntPtr sceneIR, string filePath)
-        {
-            return ovrAudio_AudioSceneIRReadFile(sceneIR, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength);
-        public int AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength)
-        {
-            return ovrAudio_AudioSceneIRReadMemory(sceneIR, data, dataLength);
-        }
-
-        /***********************************************************************************/
         // Shoebox Reflections API
         [DllImport(binaryName)]
         private static extern int ovrAudio_SetAdvancedBoxRoomParametersUnity(IntPtr context, float width, float height, float depth,
@@ -795,6 +285,13 @@ public class MetaXRAudioNativeInterface
         [DllImport(binaryName)]
         private static extern int ovrAudio_Enable(IntPtr context, int what, int enable);
         public int SetEnabled(int feature, bool enabled)
+        {
+            return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
+        }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_Enable(IntPtr context, EnableFlag what, int enable);
+        public int SetEnabled(EnableFlag feature, bool enabled)
         {
             return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
         }
@@ -859,208 +356,6 @@ public class MetaXRAudioNativeInterface
         public static extern int ovrAudio_GetPluginContext(out IntPtr context, uint clientType);
 
         /***********************************************************************************/
-        // Settings API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetPropagationQuality(IntPtr context, float quality);
-        public int SetPropagationQuality(float quality)
-        {
-            return ovrAudio_SetPropagationQuality(context, quality);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetPropagationThreadAffinity(IntPtr context, UInt64 cpuMask);
-        public int SetPropagationThreadAffinity(UInt64 cpuMask)
-        {
-            return ovrAudio_SetPropagationThreadAffinity(context, cpuMask);
-        }
-
-        /***********************************************************************************/
-        // Geometry API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioGeometry(IntPtr context, out IntPtr geometry);
-        public int CreateAudioGeometry(out IntPtr geometry)
-        {
-            return ovrAudio_CreateAudioGeometry(context, out geometry);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioGeometry(IntPtr geometry);
-        public int DestroyAudioGeometry(IntPtr geometry)
-        {
-            return ovrAudio_DestroyAudioGeometry(geometry);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                                        float[] vertices, UIntPtr verticesBytesOffset, UIntPtr vertexCount, UIntPtr vertexStride, ovrAudioScalarType vertexType,
-                                                                        int[] indices, UIntPtr indicesByteOffset, UIntPtr indexCount, ovrAudioScalarType indexType,
-                                                                        MeshGroup[] groups, UIntPtr groupCount);
-
-        public int AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                        float[] vertices, int vertexCount,
-                                                        int[] indices, int indexCount,
-                                                        MeshGroup[] groups, int groupCount)
-        {
-            return ovrAudio_AudioGeometryUploadMeshArrays(geometry,
-                vertices, UIntPtr.Zero, (UIntPtr)vertexCount, UIntPtr.Zero, ovrAudioScalarType.Float32,
-                indices, UIntPtr.Zero, (UIntPtr)indexCount, ovrAudioScalarType.UInt32,
-                groups, (UIntPtr)groupCount);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4);
-        public int AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4)
-        {
-            return ovrAudio_AudioGeometrySetTransform(geometry, matrix4x4);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4);
-        public int AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4)
-        {
-            return ovrAudio_AudioGeometryGetTransform(geometry, out matrix4x4);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryWriteMeshFile(IntPtr geometry, string filePath);
-        public int AudioGeometryWriteMeshFile(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryWriteMeshFile(geometry, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryReadMeshFile(IntPtr geometry, string filePath);
-        public int AudioGeometryReadMeshFile(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryReadMeshFile(geometry, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength);
-        public int AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength)
-        {
-            return ovrAudio_AudioGeometryReadMeshMemory(geometry, data, dataLength);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath);
-        public int AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryWriteMeshFileObj(geometry, filePath);
-        }
-
-        /***********************************************************************************/
-        // Material API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioMaterial(IntPtr context, out IntPtr material);
-        public int CreateAudioMaterial(out IntPtr material)
-        {
-            return ovrAudio_CreateAudioMaterial(context, out material);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioMaterial(IntPtr material);
-        public int DestroyAudioMaterial(IntPtr material)
-        {
-            return ovrAudio_DestroyAudioMaterial(material);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value);
-        public int AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value)
-        {
-            return ovrAudio_AudioMaterialSetFrequency(material, property, frequency, value);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value);
-        public int AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value)
-        {
-            return ovrAudio_AudioMaterialGetFrequency(material, property, frequency, out value);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialReset(IntPtr material, MaterialProperty property);
-        public int AudioMaterialReset(IntPtr material, MaterialProperty property)
-        {
-            return ovrAudio_AudioMaterialReset(material, property);
-        }
-
-        /***********************************************************************************/
-        // Scene IR API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioSceneIR(IntPtr context, out IntPtr sceneIR);
-        public int CreateAudioSceneIR(out IntPtr sceneIR)
-        {
-            return ovrAudio_CreateAudioSceneIR(context, out sceneIR);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioSceneIR(IntPtr sceneIR);
-        public int DestroyAudioSceneIR(IntPtr sceneIR)
-        {
-            return ovrAudio_DestroyAudioSceneIR(sceneIR);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status);
-        public int AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status)
-        {
-            return ovrAudio_AudioSceneIRGetStatus(sceneIR, out status);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetStatus(out SceneIRParameters parameters);
-        public int InitializeAudioSceneIRParameters(out SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRGetStatus(out parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters);
-        public int AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRCompute(sceneIR, ref parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters);
-        public int AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRComputeCustomPoints(sceneIR, points, pointCount, ref parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount);
-        public int AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount)
-        {
-            return ovrAudio_AudioSceneIRGetPointCount(sceneIR, out pointCount);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount);
-        public int AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount)
-        {
-            return ovrAudio_AudioSceneIRGetPoints(sceneIR, points, maxPointCount);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRWriteFile(IntPtr sceneIR, string filePath);
-        public int AudioSceneIRWriteFile(IntPtr sceneIR, string filePath)
-        {
-            return  ovrAudio_AudioSceneIRWriteFile(sceneIR, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRReadFile(IntPtr sceneIR, string filePath);
-        public int AudioSceneIRReadFile(IntPtr sceneIR, string filePath)
-        {
-            return ovrAudio_AudioSceneIRReadFile(sceneIR, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength);
-        public int AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength)
-        {
-            return ovrAudio_AudioSceneIRReadMemory(sceneIR, data, dataLength);
-        }
-
-        /***********************************************************************************/
         // Shoebox Reflections API
         [DllImport(binaryName)]
         private static extern int ovrAudio_SetAdvancedBoxRoomParametersUnity(IntPtr context, float width, float height, float depth,
@@ -1091,6 +386,13 @@ public class MetaXRAudioNativeInterface
         [DllImport(binaryName)]
         private static extern int ovrAudio_Enable(IntPtr context, int what, int enable);
         public int SetEnabled(int feature, bool enabled)
+        {
+            return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
+        }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_Enable(IntPtr context, EnableFlag what, int enable);
+        public int SetEnabled(EnableFlag feature, bool enabled)
         {
             return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
         }
@@ -1195,208 +497,6 @@ public class MetaXRAudioNativeInterface
         private static extern void setOnDestroyContextCallback(IntPtr callback);
 
         /***********************************************************************************/
-        // Settings API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetPropagationQuality(IntPtr context, float quality);
-        public int SetPropagationQuality(float quality)
-        {
-            return ovrAudio_SetPropagationQuality(context, quality);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_SetPropagationThreadAffinity(IntPtr context, UInt64 cpuMask);
-        public int SetPropagationThreadAffinity(UInt64 cpuMask)
-        {
-            return ovrAudio_SetPropagationThreadAffinity(context, cpuMask);
-        }
-
-        /***********************************************************************************/
-        // Geometry API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioGeometry(IntPtr context, out IntPtr geometry);
-        public int CreateAudioGeometry(out IntPtr geometry)
-        {
-            return ovrAudio_CreateAudioGeometry(context, out geometry);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioGeometry(IntPtr geometry);
-        public int DestroyAudioGeometry(IntPtr geometry)
-        {
-            return ovrAudio_DestroyAudioGeometry(geometry);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                                        float[] vertices, UIntPtr verticesBytesOffset, UIntPtr vertexCount, UIntPtr vertexStride, ovrAudioScalarType vertexType,
-                                                                        int[] indices, UIntPtr indicesByteOffset, UIntPtr indexCount, ovrAudioScalarType indexType,
-                                                                        MeshGroup[] groups, UIntPtr groupCount);
-
-        public int AudioGeometryUploadMeshArrays(IntPtr geometry,
-                                                        float[] vertices, int vertexCount,
-                                                        int[] indices, int indexCount,
-                                                        MeshGroup[] groups, int groupCount)
-        {
-            return ovrAudio_AudioGeometryUploadMeshArrays(geometry,
-                vertices, UIntPtr.Zero, (UIntPtr)vertexCount, UIntPtr.Zero, ovrAudioScalarType.Float32,
-                indices, UIntPtr.Zero, (UIntPtr)indexCount, ovrAudioScalarType.UInt32,
-                groups, (UIntPtr)groupCount);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4);
-        public int AudioGeometrySetTransform(IntPtr geometry, float[] matrix4x4)
-        {
-            return ovrAudio_AudioGeometrySetTransform(geometry, matrix4x4);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4);
-        public int AudioGeometryGetTransform(IntPtr geometry, out float[] matrix4x4)
-        {
-            return ovrAudio_AudioGeometryGetTransform(geometry, out matrix4x4);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryWriteMeshFile(IntPtr geometry, string filePath);
-        public int AudioGeometryWriteMeshFile(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryWriteMeshFile(geometry, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryReadMeshFile(IntPtr geometry, string filePath);
-        public int AudioGeometryReadMeshFile(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryReadMeshFile(geometry, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength);
-        public int AudioGeometryReadMeshMemory(IntPtr geometry, IntPtr data, UInt64 dataLength)
-        {
-            return ovrAudio_AudioGeometryReadMeshMemory(geometry, data, dataLength);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath);
-        public int AudioGeometryWriteMeshFileObj(IntPtr geometry, string filePath)
-        {
-            return ovrAudio_AudioGeometryWriteMeshFileObj(geometry, filePath);
-        }
-
-        /***********************************************************************************/
-        // Material API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioMaterial(IntPtr context, out IntPtr material);
-        public int CreateAudioMaterial(out IntPtr material)
-        {
-            return ovrAudio_CreateAudioMaterial(context, out material);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioMaterial(IntPtr material);
-        public int DestroyAudioMaterial(IntPtr material)
-        {
-            return ovrAudio_DestroyAudioMaterial(material);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value);
-        public int AudioMaterialSetFrequency(IntPtr material, MaterialProperty property, float frequency, float value)
-        {
-            return ovrAudio_AudioMaterialSetFrequency(material, property, frequency, value);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value);
-        public int AudioMaterialGetFrequency(IntPtr material, MaterialProperty property, float frequency, out float value)
-        {
-            return ovrAudio_AudioMaterialGetFrequency(material, property, frequency, out value);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioMaterialReset(IntPtr material, MaterialProperty property);
-        public int AudioMaterialReset(IntPtr material, MaterialProperty property)
-        {
-            return ovrAudio_AudioMaterialReset(material, property);
-        }
-
-        /***********************************************************************************/
-        // Scene IR API
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_CreateAudioSceneIR(IntPtr context, out IntPtr sceneIR);
-        public int CreateAudioSceneIR(out IntPtr sceneIR)
-        {
-            return ovrAudio_CreateAudioSceneIR(context, out sceneIR);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_DestroyAudioSceneIR(IntPtr sceneIR);
-        public int DestroyAudioSceneIR(IntPtr sceneIR)
-        {
-            return ovrAudio_DestroyAudioSceneIR(sceneIR);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status);
-        public int AudioSceneIRGetStatus(IntPtr sceneIR, out SceneIRStatus status)
-        {
-            return ovrAudio_AudioSceneIRGetStatus(sceneIR, out status);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetStatus(out SceneIRParameters parameters);
-        public int InitializeAudioSceneIRParameters(out SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRGetStatus(out parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters);
-        public int AudioSceneIRCompute(IntPtr sceneIR, ref SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRCompute(sceneIR, ref parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters);
-        public int AudioSceneIRComputeCustomPoints(IntPtr sceneIR,
-            float[] points, UIntPtr pointCount, ref SceneIRParameters parameters)
-        {
-            return ovrAudio_AudioSceneIRComputeCustomPoints(sceneIR, points, pointCount, ref parameters);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount);
-        public int AudioSceneIRGetPointCount(IntPtr sceneIR, out UIntPtr pointCount)
-        {
-            return ovrAudio_AudioSceneIRGetPointCount(sceneIR, out pointCount);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount);
-        public int AudioSceneIRGetPoints(IntPtr sceneIR, float[] points, UIntPtr maxPointCount)
-        {
-            return ovrAudio_AudioSceneIRGetPoints(sceneIR, points, maxPointCount);
-        }
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRWriteFile(IntPtr sceneIR, string filePath);
-        public int AudioSceneIRWriteFile(IntPtr sceneIR, string filePath)
-        {
-            return  ovrAudio_AudioSceneIRWriteFile(sceneIR, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRReadFile(IntPtr sceneIR, string filePath);
-        public int AudioSceneIRReadFile(IntPtr sceneIR, string filePath)
-        {
-            return ovrAudio_AudioSceneIRReadFile(sceneIR, filePath);
-        }
-
-        [DllImport(binaryName)]
-        private static extern int ovrAudio_AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength);
-        public int AudioSceneIRReadMemory(IntPtr sceneIR, IntPtr data, UInt64 dataLength)
-        {
-            return ovrAudio_AudioSceneIRReadMemory(sceneIR, data, dataLength);
-        }
-
-        /***********************************************************************************/
         // Shoebox Reflections API
         [DllImport(binaryName)]
         private static extern int ovrAudio_SetAdvancedBoxRoomParametersUnity(IntPtr context, float width, float height, float depth,
@@ -1427,6 +527,13 @@ public class MetaXRAudioNativeInterface
         [DllImport(binaryName)]
         private static extern int ovrAudio_Enable(IntPtr context, int what, int enable);
         public int SetEnabled(int feature, bool enabled)
+        {
+            return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
+        }
+
+        [DllImport(binaryName)]
+        private static extern int ovrAudio_Enable(IntPtr context, EnableFlag what, int enable);
+        public int SetEnabled(EnableFlag feature, bool enabled)
         {
             return ovrAudio_Enable(context, feature, enabled ? 1 : 0);
         }
