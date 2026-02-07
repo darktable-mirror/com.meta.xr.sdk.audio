@@ -1,7 +1,7 @@
 {
   "name": "com.meta.xr.sdk.audio",
   "displayName": "Meta XR Audio SDK",
-  "version": "81.0.0",
+  "version": "81.0.1",
   "description": "Comprehensive spatial audio features for immersive applications, including a spatial audio renderer with HRTF, ambisonic audio playback, and room acoustics for creating immersive environments.",
   "samples": [
     {
