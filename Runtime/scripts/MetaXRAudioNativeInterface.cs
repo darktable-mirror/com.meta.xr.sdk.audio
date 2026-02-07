@@ -83,7 +83,7 @@ public class MetaXRAudioNativeInterface
         }
         try
         {
-            FMODPluginInterface.ovrAudio_GetPluginContext(out temp, ClientType.OVRA_CLIENT_TYPE_FMOD);
+            FMODPluginInterface.ovrAudio_GetPluginContext(out temp);
             Debug.Log("Meta XR Audio Native Interface initialized with FMOD plugin");
             return new FMODPluginInterface();
         }
@@ -110,25 +110,6 @@ public class MetaXRAudioNativeInterface
         Float16, ///< 16-bit floating point number with 1 bit sign, 10 bits exponent, and 15 bits mantissa
         Float32, ///< 32-bit floating point number with 1 bit sign, 23 bits exponent, and 23 bits mantissa
         Float64 ///< 64-bit floating point number with 1 bit sign, 52 bits exponent, and 52 bits mantissa
-    }
-
-    /// \brief A colection of constant integers used as an enumeration to specify the what type of client/binary a MetaXRAudioNativeInterface class wraps.
-    public class ClientType
-    {
-        // Copied from AudioSDK\OVRAudio\OVR_Audio_Internal.h
-        public const uint OVRA_CLIENT_TYPE_NATIVE = 0; ///< [DEPRECATED] Native, raw binary client type or unknown
-        public const uint OVRA_CLIENT_TYPE_WWISE_2016 = 1; ///< [DEPRECATED] Wwise 2016 client
-        public const uint OVRA_CLIENT_TYPE_WWISE_2017_1 = 2; ///< [DEPRECATED] Wwise 2017.1 client
-        public const uint OVRA_CLIENT_TYPE_WWISE_2017_2 = 3; ///< [DEPRECATED] Wwise 2017.2 client
-        public const uint OVRA_CLIENT_TYPE_WWISE_2018_1 = 4; ///< [DEPRECATED] Wwise 2018.1 client
-        public const uint OVRA_CLIENT_TYPE_FMOD = 5; ///< FMOD client
-        public const uint OVRA_CLIENT_TYPE_UNITY = 6; ///< Unity client
-        public const uint OVRA_CLIENT_TYPE_UE4 = 7; ///< [DEPRECATED] UE4 client
-        public const uint OVRA_CLIENT_TYPE_VST = 8; ///< [DEPRECATED] UE4 client
-        public const uint OVRA_CLIENT_TYPE_AAX = 9; ///< [DEPRECATED] AAX client
-        public const uint OVRA_CLIENT_TYPE_TEST = 10; ///< [DEPRECATED] Test client
-        public const uint OVRA_CLIENT_TYPE_OTHER = 11; ///< [DEPRECATED] Other/Unknown client
-        public const uint OVRA_CLIENT_TYPE_WWISE_UNKNOWN = 12; ///< [DEPRECATED] Unknown version of the Wwise client.
     }
 
     /// \brief Abstract parent class for all classes that wrap a binary's interface.
@@ -272,17 +253,16 @@ public class MetaXRAudioNativeInterface
         /***********************************************************************************/
         // Context API: Required to create internal context if it does not exist yet
         IntPtr context_ = IntPtr.Zero;
-        IntPtr context { get { if (context_ == IntPtr.Zero) { ovrAudio_GetPluginContext(out context_, ClientType.OVRA_CLIENT_TYPE_UNITY); } return context_; } }
+        IntPtr context { get { if (context_ == IntPtr.Zero) { ovrAudio_GetPluginContext(out context_); } return context_; } }
 
         /// \brief Get the handle to the current context, creating one if necessary.
         ///
         /// Note that Unity's editor, player, and standalone builds will have different contexts.
         ///
         /// \param[out] context The returned handle to the context.
-        /// \param[in] clientType Unused/deprecated. You can ignore this parameter.
         /// \return Returns an ovrResult indicating success or failure.
         [DllImport(binaryName)]
-        public static extern int ovrAudio_GetPluginContext(out IntPtr context, uint clientType);
+        public static extern int ovrAudio_GetPluginContext(out IntPtr context);
 
         /***********************************************************************************/
         // Shoebox Reflections API
@@ -498,17 +478,16 @@ public class MetaXRAudioNativeInterface
         /***********************************************************************************/
         // Context API: Required to create internal context if it does not exist yet
         IntPtr context_ = IntPtr.Zero;
-        IntPtr context { get { if (context_ == IntPtr.Zero) { ovrAudio_GetPluginContext(out context_, ClientType.OVRA_CLIENT_TYPE_FMOD); } return context_; } }
+        IntPtr context { get { if (context_ == IntPtr.Zero) { ovrAudio_GetPluginContext(out context_); } return context_; } }
 
         /// \brief Get the handle to the current context, creating one if necessary.
         ///
         /// Note that Unity's editor, player, and standalone builds will have different contexts.
         ///
         /// \param[out] context The returned handle to the context.
-        /// \param[in] clientType Unused/deprecated. You can ignore this parameter.
         /// \return Returns an ovrResult indicating success or failure.
         [DllImport(binaryName)]
-        public static extern int ovrAudio_GetPluginContext(out IntPtr context, uint clientType);
+        public static extern int ovrAudio_GetPluginContext(out IntPtr context);
 
         /***********************************************************************************/
         // Shoebox Reflections API
