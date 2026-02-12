@@ -60,8 +60,6 @@ internal class MetaXRAcousticMaterialPropertiesEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        //serializedObject.Update();
-
         MetaXRAcousticMaterialProperties props = target as MetaXRAcousticMaterialProperties;
 
         EditorGUI.BeginChangeCheck();
@@ -130,14 +128,23 @@ internal class MetaXRAcousticMaterialPropertiesEditor : Editor
 
         if (Application.isPlaying)
         {
-            MetaXRAcousticMaterial[] mats = FindObjectsOfType<MetaXRAcousticMaterial>();
+            MetaXRAcousticMaterial[] mats = GetAcousticMaterialsInScene();
             foreach (MetaXRAcousticMaterial mat in mats)
             {
-                if (mat.Properties = props)
+                if (mat.Properties == props)
                 {
                     mat.ApplyMaterialProperties();
                 }
             }
         }
+    }
+
+    private static MetaXRAcousticMaterial[] GetAcousticMaterialsInScene()
+    {
+#if UNITY_6000_0_OR_NEWER
+        return FindObjectsByType<MetaXRAcousticMaterial>(FindObjectsSortMode.None);
+#else
+        return FindObjectsOfType<MetaXRAcousticMaterial>();
+#endif
     }
 }

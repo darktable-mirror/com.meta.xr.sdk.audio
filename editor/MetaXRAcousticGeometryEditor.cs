@@ -82,11 +82,14 @@ public class MetaXRAcousticGeometryEditor : Editor
         bool pathChanged = false;
         string newFilePath = geo.AbsoluteFilePath;
         bool shouldWriteMesh = false;
+        bool gatherGeometry = geo.gatherGeometry_;
 
         showAdvancedControls = EditorGUILayout.Foldout(showAdvancedControls, "Advanced Controls");
         if (showAdvancedControls)
         {
             EditorGUI.indentLevel++;
+
+
             newUseColliders = EditorGUILayout.Toggle(new GUIContent("Use Colliders", "Use the physics MeshColliders instead of the Visual geometry."), newUseColliders);
             newOverrideExcludeTagsEnabled = EditorGUILayout.Toggle(new GUIContent("Override Exclude Tags", "Override the Project Settings exclude tags to define custom exclude tags only for this geometry."), newOverrideExcludeTagsEnabled);
 

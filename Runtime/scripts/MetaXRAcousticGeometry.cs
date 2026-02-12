@@ -294,7 +294,9 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
     {
         if (geometryHandle != IntPtr.Zero)
         {
+#if META_XR_ACOUSTIC_INFO
             Debug.LogWarning("Geometry already exists, skipping", gameObject);
+#endif
             return true;
         }
 
@@ -390,8 +392,6 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         {
             return;
         }
-
-        Debug.Log($"Enabling Geometry: {relativeFilePath}", gameObject);
 
         Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.ENABLED, true);
         ApplyTransform();
@@ -1241,12 +1241,19 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         Color[] vertexColors = new Color[gizmoVertexMaterialIndices.Length];
         for (int i = 0; i < gizmoVertexMaterialIndices.Length; i++)
         {
-            if (gizmoVertexMaterialIndices[i] >= materialColors.Length || i >= vertexColors.Length || i >= gizmoVertexMaterialIndices.Length)
+            if (gatherGeometry_)
             {
-                Debug.LogError($"out of bounds: i={i}/{vertexColors.Length} ({gizmoVertexMaterialIndices.Length}) - [{i}]={gizmoVertexMaterialIndices[i]}");
-                return;
+                if (gizmoVertexMaterialIndices[i] >= materialColors.Length || i >= vertexColors.Length || i >= gizmoVertexMaterialIndices.Length)
+                {
+                    Debug.LogError($"out of bounds: i={i}/{vertexColors.Length} ({gizmoVertexMaterialIndices.Length}) - [{i}]={gizmoVertexMaterialIndices[i]}", gameObject);
+                    return;
+                }
+                vertexColors[i] = materialColors[gizmoVertexMaterialIndices[i]];
             }
-            vertexColors[i] = materialColors[gizmoVertexMaterialIndices[i]];
+            else
+            {
+                vertexColors[i] = DEFAULT_MATERIAL_COLOR;
+            }
         }
         gizmoMesh.colors = vertexColors;
     }
@@ -1725,8 +1732,10 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 
         if (result == Success)
         {
+#if META_XR_ACOUSTIC_INFO
             float loadDuration = Time.realtimeSinceStartup - startTime;
-            Debug.Log($"Sucessfully loaded Geometry {name}, load time = {loadDuration}", gameObject);
+            Debug.Log($"Sucessfully loaded Geometry {name}, load time = {loadDuration}");
+#endif
 
             Native.Interface.AudioGeometrySetObjectFlag(geometryHandle, ObjectFlags.ENABLED, isActiveAndEnabled);
             ApplyTransform();
@@ -1740,7 +1749,6 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
 
             if (isActiveAndEnabled)
             {
-
 #if META_XR_ACOUSTIC_INFO
                 Debug.Log($"Enabling Geometry after load");
 #endif
@@ -1755,7 +1763,7 @@ internal class MetaXRAcousticGeometry : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Unable to read the geometry {name}", gameObject);
+            Debug.LogError($"Unable to read the geometry {name}");
         }
     }
 

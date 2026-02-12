@@ -26,6 +26,10 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
+#if !UNITY_6000
+using PhysicsMaterial = UnityEngine.PhysicMaterial;
+#endif
+
 [CustomEditor(typeof(MetaXRAcousticMaterialMapping))]
 internal class MetaXRAcousticMaterialMappingEditor : Editor
 {
@@ -60,7 +64,7 @@ internal class MetaXRAcousticMaterialMappingEditor : Editor
         var propAcoustic = element.FindPropertyRelative(nameof(MetaXRAcousticMaterialMapping.Pair.acousticMaterial));
         var acousticMat = propAcoustic?.objectReferenceValue as MetaXRAcousticMaterialProperties;
 
-        PhysicMaterial newPhysicMaterial = EditorGUI.ObjectField(rect, propPhysics?.objectReferenceValue, typeof(PhysicMaterial), false) as PhysicMaterial;
+        PhysicsMaterial newPhysicMaterial = EditorGUI.ObjectField(rect, propPhysics?.objectReferenceValue, typeof(PhysicsMaterial), false) as PhysicsMaterial;
         if (propPhysics != null)
             propPhysics.objectReferenceValue = newPhysicMaterial;
 
