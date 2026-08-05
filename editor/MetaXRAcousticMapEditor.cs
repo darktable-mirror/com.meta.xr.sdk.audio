@@ -98,6 +98,11 @@ internal class MetaXRAcousticMapEditor : Editor
 #if META_XR_ACOUSTIC_INFO
         Debug.Log($"Open scene {scene.name}");
 #endif
+        if (mode == OpenSceneMode.AdditiveWithoutLoading)
+        {
+            return;
+        }
+
         GameObject[] rootObjects = scene.GetRootGameObjects();
         foreach (GameObject go in rootObjects)
         {
