@@ -27,6 +27,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Runtime.InteropServices;
+using UnityEditor;
 
 /// \brief Component to extend the built-in AudioSource with Meta-specific features.
 ///
@@ -42,8 +43,8 @@ using System.Runtime.InteropServices;
 [RequireComponent(typeof(AudioSource))]
 public class MetaXRAudioSource : MonoBehaviour
 {
+    [SerializeField, HideInInspector]
     private AudioSource source_;
-    private bool wasPlaying_ = false;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void OnBeforeSceneLoadRuntimeMethod()
@@ -69,6 +70,7 @@ public class MetaXRAudioSource : MonoBehaviour
         set
         {
             enableSpatialization = value;
+            source_.spatialize = enableSpatialization;
         }
     }
 
@@ -91,6 +93,7 @@ public class MetaXRAudioSource : MonoBehaviour
         set
         {
             gainBoostDb = Mathf.Clamp(value, 0.0f, 20.0f);
+            source_.SetSpatializerFloat((int)NativeParameterIndex.P_GAIN, gainBoostDb);
         }
     }
 
@@ -111,6 +114,7 @@ public class MetaXRAudioSource : MonoBehaviour
         set
         {
             enableAcoustics = value;
+            source_.SetSpatializerFloat((int)NativeParameterIndex.P_DISABLE_RFL, enableAcoustics ? 0.0f : 1.0f);
         }
     }
 
@@ -134,29 +138,14 @@ public class MetaXRAudioSource : MonoBehaviour
         set
         {
             reverbSendDb = Mathf.Clamp(value, -60.0f, 20.0f);
+            source_.SetSpatializerFloat((int)NativeParameterIndex.P_REVERB_SEND, reverbSendDb);
         }
     }
 
-    void Awake()
+    private void Awake()
     {
         source_ = GetComponent<AudioSource>();
         UpdateParameters();
-    }
-
-    void Update()
-    {
-        if (source_ == null)
-        {
-            source_ = GetComponent<AudioSource>();
-            if (source_ == null)
-            {
-                return;
-            }
-        }
-
-        UpdateParameters();
-
-        wasPlaying_ = source_.isPlaying;
     }
 
     /// \brief Enumeration of the Meta's native spatialializer plug-in for Unity.
@@ -265,7 +254,7 @@ public class MetaXRAudioSource : MonoBehaviour
     ///
     /// This function should be called during every call to Update and there should be no need to call this
     /// explicitly unless you want to force sync the spatializer instance's parameters with this component.
-    public void UpdateParameters()
+    private void UpdateParameters()
     {
         source_.spatialize = enableSpatialization;
         source_.SetSpatializerFloat((int)NativeParameterIndex.P_GAIN, gainBoostDb);
@@ -273,6 +262,18 @@ public class MetaXRAudioSource : MonoBehaviour
         source_.SetSpatializerFloat((int)NativeParameterIndex.P_REVERB_SEND, reverbSendDb);
     }
 
-    [System.Runtime.InteropServices.DllImport(MetaXRAudioNativeInterface.UnityNativeInterface.binaryName)]
+    [DllImport(MetaXRAudioNativeInterface.UnityNativeInterface.binaryName)]
     private static extern int MetaXRAudio_Unity_SetGlobalVoiceLimit(int VoiceLimit);
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        source_ = GetComponent<AudioSource>();
+
+        if (EditorApplication.isPlaying)
+        {
+            UpdateParameters();
+        }
+    }
+#endif
 }
