@@ -28,6 +28,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Runtime.InteropServices;
+using UnityEditor;
 
 /// \brief Component to extend the built-in AudioSource with Meta-specific, experimental features.
 ///
@@ -39,9 +40,10 @@ using System.Runtime.InteropServices;
 /// MetaXRAudioSourceExperimentalFeatures::Update().
 ///
 /// To extend an AudioSource with Meta-specific, non-experimental features, use \ref MetaXRAudioSource.
-[RequireComponent(typeof(MetaXRAudioSource))]
+[RequireComponent(typeof(MetaXRAudioSource), typeof(AudioSource))]
 public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
 {
+    [SerializeField, HideInInspector]
     private AudioSource source_;
 
     // Public
@@ -67,6 +69,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         set
         {
             hrtfIntensity = Mathf.Clamp(value, 0.0f, 1.0f);
+            source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_HRTF_INTENSITY, hrtfIntensity);
         }
     }
 
@@ -86,6 +89,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         set
         {
             volumetricRadius = Mathf.Max(value, 0.0f);
+            source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_RADIUS, volumetricRadius);
         }
     }
 
@@ -110,6 +114,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         set
         {
             earlyReflectionsSendDb = Mathf.Clamp(value, -60.0f, 20.0f);
+            source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_REFLECTIONS_SEND, earlyReflectionsSendDb);
         }
     }
 
@@ -131,6 +136,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         set
         {
             reverbReach = Mathf.Clamp(value, 0.0f, 1.0f);
+            source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_REVERB_REACH, reverbReach);
         }
     }
 
@@ -183,6 +189,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         set
         {
             directivityIntensity = Mathf.Clamp(value, 0.0f, 1.0f);
+            source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECTIVITY_INTENSITY, directivityIntensity);
         }
     }
 
@@ -202,6 +209,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         set
         {
             directivityPattern = value;
+            source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECTIVITY_ENABLED, directivityPattern == DirectivityPatternType.None ? 0.0f : 1.0f);
         }
     }
 
@@ -221,6 +229,7 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         set
         {
             directSoundEnabled = value;
+            source_.SetSpatializerFloat((int)MetaXRAudioSource.NativeParameterIndex.P_DIRECT_ENABLED, directSoundEnabled ? 1.0f : 0.0f);
         }
     }
 
@@ -244,30 +253,10 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
         }
     }
 
-    private void OnValidate()
-    {
-        volumetricRadius = Mathf.Max(volumetricRadius, 0.0f);
-    }
-
     void Awake()
     {
         // We might iterate through multiple sources / game object
         source_ = GetComponent<AudioSource>();
-        UpdateParameters();
-    }
-
-    void Update()
-    {
-        // We might iterate through multiple sources / game object
-        if (source_ == null)
-        {
-            source_ = GetComponent<AudioSource>();
-            if (source_ == null)
-            {
-                return;
-            }
-        }
-
         UpdateParameters();
     }
 
@@ -292,4 +281,18 @@ public class MetaXRAudioSourceExperimentalFeatures : MonoBehaviour
     [DllImport(MetaXRAudioNativeInterface.UnityNativeInterface.binaryName)]
     private static extern void MetaXRAudio_GetGlobalRoomReflectionValues(ref bool reflOn, ref bool reverbOn,
         ref float width, ref float height, ref float length);
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        volumetricRadius = Mathf.Max(volumetricRadius, 0.0f);
+        source_ = GetComponent<AudioSource>();
+
+        if (EditorApplication.isPlaying)
+        {
+            UpdateParameters();
+        }
+    }
+#endif
+
 }
