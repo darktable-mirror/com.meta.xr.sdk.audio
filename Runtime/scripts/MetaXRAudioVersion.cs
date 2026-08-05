@@ -27,12 +27,13 @@ using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
 
-/// \brief Displays the current version of Meta XR Audio in a debug log on wake-up as a debugging utility.
+/// \brief Displays the current version of Meta XR Audio in a debug log on initialization as a debugging utility.
 ///
-/// Under the hoold it simly gets the major/minor/patch version of the DLL that was loaded and displays it.
-public class MetaXRAudioVersion : MonoBehaviour
+/// Under the hood it simply gets the major/minor/patch version of the DLL that was loaded and displays it.
+public static class MetaXRAudioVersion
 {
-    void Awake()
+    [RuntimeInitializeOnLoadMethod]
+    private static void Initialize()
     {
         int major = 0;
         int minor = 0;
@@ -40,7 +41,7 @@ public class MetaXRAudioVersion : MonoBehaviour
 
         MetaXRAudio_Unity_GetVersion(ref major, ref minor, ref patch);
 
-        String version = System.String.Format($"MetaXRAudio Version: {major}.{minor}.{patch}");
+        String version = $"MetaXRAudio Version: {major}.{minor}.{patch}";
 
         Debug.Log(version);
     }
