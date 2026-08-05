@@ -25,6 +25,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using UnityEditor;
 using UnityEngine;
 using static MetaXRAudioRoomAcousticProperties;
 
@@ -38,50 +40,50 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
     /// \brief Whether to center the room model on the listener or position its center in world space.
     ///
     /// If set to false, the room model's center will be placed at the transform position.
-    [Tooltip("Center the room model on the listener. When disabled, center the room model on the GameObject this script is attached to.")]
-    public bool lockPositionToListener = true;
+    [SerializeField, Tooltip("Center the room model on the listener. When disabled, center the room model on the GameObject this script is attached to.")]
+    private bool lockPositionToListener = true;
 
     /// \brief Width of the room, in meters.
-    [Tooltip("Width of the room model in meters")]
-    public float width = 8.0f;
+    [SerializeField, Tooltip("Width of the room model in meters")]
+    private float width = 8.0f;
 
     /// \brief Height of the room, in meters.
-    [Tooltip("Height of the room model in meters")]
-    public float height = 3.0f;
+    [SerializeField, Tooltip("Height of the room model in meters")]
+    private float height = 3.0f;
 
     /// \brief Depth of the room, in meters.
-    [Tooltip("Depth of the room model in meters")]
-    public float depth = 5.0f;
+    [SerializeField, Tooltip("Depth of the room model in meters")]
+    private float depth = 5.0f;
 
     /// \brief Material preset of the left wall of the room model.
     /// \see MaterialPreset
-    [Tooltip("Material of the left wall of the room model")]
-    public MaterialPreset leftMaterial = MaterialPreset.GypsumBoard;
+    [SerializeField, Tooltip("Material of the left wall of the room model")]
+    private MaterialPreset leftMaterial = MaterialPreset.GypsumBoard;
 
     /// \brief Material preset of the right wall of the room model.
     /// \see MaterialPreset
-    [Tooltip("Material of the right wall of the room model")]
-    public MaterialPreset rightMaterial = MaterialPreset.GypsumBoard;
+    [SerializeField, Tooltip("Material of the right wall of the room model")]
+    private MaterialPreset rightMaterial = MaterialPreset.GypsumBoard;
 
     /// \brief Material preset of the ceiling of the room model.
     /// \see MaterialPreset
-    [Tooltip("Material of the ceiling of the room model")]
-    public MaterialPreset ceilingMaterial = MaterialPreset.AcousticTile;
+    [SerializeField, Tooltip("Material of the ceiling of the room model")]
+    private MaterialPreset ceilingMaterial = MaterialPreset.AcousticTile;
 
     /// \brief Material preset of the floor of the room model.
     /// \see MaterialPreset
-    [Tooltip("Material of the floor of the room model")]
-    public MaterialPreset floorMaterial = MaterialPreset.Carpet;
+    [SerializeField, Tooltip("Material of the floor of the room model")]
+    private MaterialPreset floorMaterial = MaterialPreset.Carpet;
 
     /// \brief Material preset of the front wall of the room model.
     /// \see MaterialPreset
-    [Tooltip("Material of the front wall of the room model")]
-    public MaterialPreset frontMaterial = MaterialPreset.GypsumBoard;
+    [SerializeField, Tooltip("Material of the front wall of the room model")]
+    private MaterialPreset frontMaterial = MaterialPreset.GypsumBoard;
 
     /// \brief Material preset of the back wall of the room model.
     /// \see MaterialPreset
-    [Tooltip("Material of the back wall of the room model")]
-    public MaterialPreset backMaterial = MaterialPreset.GypsumBoard;
+    [SerializeField, Tooltip("Material of the back wall of the room model")]
+    private MaterialPreset backMaterial = MaterialPreset.GypsumBoard;
 
     /// \brief Current room clutter factor.
     ///
@@ -96,9 +98,9 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
     /// }
     /// \endcode
     /// \see MetaXRAudioNativeInterface#NativeInterface#SetRoomClutterFactor
-    [Tooltip("Diffuses the reflections and reverberation to simulate objects inside the room. Zero represents a completely empty room.")]
+    [SerializeField, Tooltip("Diffuses the reflections and reverberation to simulate objects inside the room. Zero represents a completely empty room.")]
     [Range(0.0f, 1.0f)]
-    public float clutterFactor = 0.5f;
+    private float clutterFactor = 0.5f;
 
     private const int kAudioBandCount = 4;
     private float[] clutterFactorBands = new float[kAudioBandCount];
@@ -106,7 +108,103 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
     /// \brief Array of 6 materials, each with 4 frequency dependent reflection coefficients in [Left, Right, Ceiling, Floor, Front, Back] order.
     ///
     /// \see MetaXRAudioNativeInterface#NativeInterface#SetAdvancedBoxRoomParameters
-    float[] wallMaterials = new float[6 * kAudioBandCount];
+    private float[] wallMaterials = new float[6 * kAudioBandCount];
+
+    public bool LockPositionToListener
+    {
+        get => lockPositionToListener;
+        set
+        {
+            lockPositionToListener = value;
+            UpdateRoomParameters();
+        }
+    }
+
+    public MaterialPreset LeftMaterial
+    {
+        get => leftMaterial;
+        set
+        {
+            leftMaterial = value;
+            SetWallMaterialPreset(WallIndex.Left, leftMaterial);
+            UpdateRoomParameters();
+        }
+    }
+
+    public MaterialPreset RightMaterial
+    {
+        get => rightMaterial;
+        set
+        {
+            rightMaterial = value;
+            SetWallMaterialPreset(WallIndex.Right, rightMaterial);
+            UpdateRoomParameters();
+        }
+    }
+
+    public MaterialPreset CeilingMaterial
+    {
+        get => ceilingMaterial;
+        set
+        {
+            ceilingMaterial = value;
+            SetWallMaterialPreset(WallIndex.Ceiling, ceilingMaterial);
+            UpdateRoomParameters();
+        }
+    }
+
+    public MaterialPreset FloorMaterial
+    {
+        get => floorMaterial;
+        set
+        {
+            floorMaterial = value;
+            SetWallMaterialPreset(WallIndex.Floor, floorMaterial);
+            UpdateRoomParameters();
+        }
+    }
+
+    public MaterialPreset FrontMaterial
+    {
+        get => frontMaterial;
+        set
+        {
+            frontMaterial = value;
+            SetWallMaterialPreset(WallIndex.Front, frontMaterial);
+            UpdateRoomParameters();
+        }
+    }
+
+    public MaterialPreset BackMaterial
+    {
+        get => backMaterial;
+        set
+        {
+            backMaterial = value;
+            SetWallMaterialPreset(WallIndex.Back, rightMaterial);
+            UpdateRoomParameters();
+        }
+    }
+
+    public float ClutterFactor
+    {
+        get => clutterFactor;
+        set
+        {
+            clutterFactor = Mathf.Clamp01(value);
+            UpdateClutterFactor();
+        }
+    }
+
+    public enum WallIndex
+    {
+        Right = 0,
+        Left = 1,
+        Ceiling = 2,
+        Floor = 3,
+        Front = 4,
+        Back = 5,
+    }
 
     /// \brief Enum representing material presets.
     ///
@@ -162,7 +260,7 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
             Debug.Log("No Meta XR Audio Room found, setting default room");
             GameObject temp = new GameObject("Temporary Room");
             MetaXRAudioRoomAcousticProperties tempRoom = temp.AddComponent<MetaXRAudioRoomAcousticProperties>();
-            tempRoom.Update();
+            tempRoom.UpdateParameters();
             DestroyImmediate(temp);
         }
 
@@ -172,23 +270,55 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
         }
     }
 
-    void Update()
+    private void Awake()
     {
-        SetWallMaterialPreset(0, rightMaterial);
-        SetWallMaterialPreset(1, leftMaterial);
-        SetWallMaterialPreset(2, ceilingMaterial);
-        SetWallMaterialPreset(3, floorMaterial);
-        SetWallMaterialPreset(4, frontMaterial);
-        SetWallMaterialPreset(5, backMaterial);
+        UpdateParameters();
+    }
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="w">width</param>
+    /// <param name="h">height</param>
+    /// <param name="d">depth</param>
+    public void SetRoomDimensions(float w, float h, float d)
+    {
+        width = w;
+        height = h;
+        depth = d;
+
+        UpdateRoomParameters();
+    }
+
+    private void UpdateParameters()
+    {
+        SetWallMaterialPreset(WallIndex.Right, rightMaterial);
+        SetWallMaterialPreset(WallIndex.Left, leftMaterial);
+        SetWallMaterialPreset(WallIndex.Ceiling, ceilingMaterial);
+        SetWallMaterialPreset(WallIndex.Floor, floorMaterial);
+        SetWallMaterialPreset(WallIndex.Front, frontMaterial);
+        SetWallMaterialPreset(WallIndex.Back, backMaterial);
+
+        UpdateRoomParameters();
+
+        UpdateClutterFactor();
+    }
+
+    private void UpdateRoomParameters()
+    {
         MetaXRAudioNativeInterface.Interface.SetAdvancedBoxRoomParameters(width, height, depth, lockPositionToListener,
             transform.position, wallMaterials);
+    }
+
+    private void UpdateClutterFactor()
+    {
         float factor = clutterFactor;
         for (int band = kAudioBandCount - 1; band >= 0; --band)
         {
             clutterFactorBands[band] = factor;
             factor *= 0.5f; // clutter has less impact on low frequencies
         }
+
         MetaXRAudioNativeInterface.Interface.SetRoomClutterFactor(clutterFactorBands);
     }
 
@@ -236,15 +366,14 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
         }
     }
 
-    void SetWallMaterialPreset(int wallIndex, MaterialPreset materialPreset)
+    void SetWallMaterialPreset(WallIndex wallIndex, MaterialPreset materialPreset)
     {
         float[] bands = GetMaterialPresetBands(materialPreset);
-        wallMaterials[wallIndex * 4 + 0] = bands[0];
-        wallMaterials[wallIndex * 4 + 1] = bands[1];
-        wallMaterials[wallIndex * 4 + 2] = bands[2];
-        wallMaterials[wallIndex * 4 + 3] = bands[3];
+        wallMaterials[(int)wallIndex * 4 + 0] = bands[0];
+        wallMaterials[(int)wallIndex * 4 + 1] = bands[1];
+        wallMaterials[(int)wallIndex * 4 + 2] = bands[2];
+        wallMaterials[(int)wallIndex * 4 + 3] = bands[3];
     }
-
 
 #if UNITY_EDITOR
     private Component _AudioListener = null;
@@ -306,6 +435,14 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
 
         Gizmos.color = new Color(0.8f, 0.8f, 0.8f, 0.25f);
         Gizmos.DrawCube(gizmoPosition, new Vector3(width, height, depth));
+    }
+
+    private void OnValidate()
+    {
+        if (EditorApplication.isPlaying)
+        {
+            UpdateParameters();
+        }
     }
 #endif
 }
