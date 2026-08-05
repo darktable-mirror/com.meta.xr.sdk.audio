@@ -299,7 +299,7 @@ internal class MetaXRAcousticMap : MonoBehaviour
 
         foreach (string guid in sceneGuids)
         {
-            if (!UnityEditor.GUID.TryParse(guid, out UnityEditor.GUID tempGuid) || tempGuid.Empty())
+            if (!UnityEngine.GUID.TryParse(guid, out UnityEngine.GUID tempGuid) || tempGuid.Empty())
             {
                 // empty GUID
                 continue;
