@@ -154,9 +154,11 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
     [RuntimeInitializeOnLoadMethod]
     static void CheckSceneHasRoom()
     {
-#pragma warning disable CS0618 // Type or member is obsolete
-        MetaXRAudioRoomAcousticProperties[] rooms = FindObjectsOfType<MetaXRAudioRoomAcousticProperties>();
-#pragma warning restore CS0618 // Type or member is obsolete
+#if UNITY_6000_4_OR_NEWER
+        MetaXRAudioRoomAcousticProperties[] rooms = FindObjectsByType<MetaXRAudioRoomAcousticProperties>();
+#else
+        MetaXRAudioRoomAcousticProperties[] rooms = FindObjectsByType<MetaXRAudioRoomAcousticProperties>(FindObjectsSortMode.None);
+#endif
         if (rooms.Length == 0)
         {
             Debug.Log("No Meta XR Audio Room found, setting default room");
@@ -258,7 +260,7 @@ public sealed class MetaXRAudioRoomAcousticProperties : MonoBehaviour
                 _AudioListener = FindFMODListener();
                 // null fmod listener, find unity listener...
                 if (_AudioListener == null)
-                    _AudioListener = FindFirstObjectByType<AudioListener>();
+                    _AudioListener = FindAnyObjectByType<AudioListener>();
             }
             return _AudioListener;
 

@@ -141,10 +141,10 @@ internal class MetaXRAcousticMaterialPropertiesEditor : Editor
 
     private static MetaXRAcousticMaterial[] GetAcousticMaterialsInScene()
     {
-#if UNITY_6000_0_OR_NEWER
-        return FindObjectsByType<MetaXRAcousticMaterial>(FindObjectsSortMode.None);
+#if UNITY_6000_4_OR_NEWER
+        return FindObjectsByType<MetaXRAcousticMaterial>();
 #else
-        return FindObjectsOfType<MetaXRAcousticMaterial>();
+        return FindObjectsByType<MetaXRAcousticMaterial>(FindObjectsSortMode.None);
 #endif
     }
 }

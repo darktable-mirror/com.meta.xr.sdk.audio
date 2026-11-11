@@ -1,7 +1,7 @@
 {
   "name": "com.meta.xr.sdk.audio",
   "displayName": "Meta XR Audio SDK",
-  "version": "85.0.0",
+  "version": "209.0.0",
   "description": "Comprehensive spatial audio features for immersive applications, including a spatial audio renderer with HRTF, ambisonic audio playback, and room acoustics for creating immersive environments.",
   "samples": [
     {
@@ -10,8 +10,8 @@
       "path": "Samples~/scenes"
     }
   ],
-  "unity": "2022.3",
-  "unityRelease": "15f1",
+  "unity": "6000.0",
+  "unityRelease": "66f2",
   "author": {
     "name": "Meta Platforms, Inc.",
     "url": "https://developer.oculus.com/"
